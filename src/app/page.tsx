@@ -1,5 +1,5 @@
 // src/app/page.tsx
-// Update Name: RoktoBondhon Trust & UX Enhancement
+// Update Name: RoktoBondhon Final Layout Fix
 
 import nextDynamic from "next/dynamic";
 import Image from "next/image";
@@ -39,16 +39,21 @@ interface LiveCounters {
 }
 
 async function getLiveCounters(): Promise<LiveCounters> {
-  const [donorRows, requestRows, districtRows] = await Promise.all([
-    sql`SELECT COUNT(*)::int AS count FROM donors WHERE status = 'approved'`,
-    sql`SELECT COUNT(*)::int AS count FROM blood_requests WHERE status = 'fulfilled'`,
-    sql`SELECT COUNT(DISTINCT district)::int AS count FROM donors WHERE status = 'approved'`,
-  ]);
-  return {
-    totalDonors: parseInt(String(donorRows[0]?.count ?? 0), 10),
-    fulfilledRequests: parseInt(String(requestRows[0]?.count ?? 0), 10),
-    districtsCount: parseInt(String(districtRows[0]?.count ?? 0), 10),
-  };
+  try {
+    const [donorRows, requestRows, districtRows] = await Promise.all([
+      sql`SELECT COUNT(*)::int AS count FROM donors WHERE status = 'approved'`,
+      sql`SELECT COUNT(*)::int AS count FROM blood_requests WHERE status = 'fulfilled'`,
+      sql`SELECT COUNT(DISTINCT district)::int AS count FROM donors WHERE status = 'approved'`,
+    ]);
+    return {
+      totalDonors: parseInt(String(donorRows[0]?.count ?? 0), 10),
+      fulfilledRequests: parseInt(String(requestRows[0]?.count ?? 0), 10),
+      districtsCount: parseInt(String(districtRows[0]?.count ?? 0), 10),
+    };
+  } catch (e) {
+    console.error("Database Error:", e);
+    return { totalDonors: 0, fulfilledRequests: 0, districtsCount: 0 };
+  }
 }
 
 // ── Components ────────────────────────────────
@@ -82,14 +87,14 @@ function Navbar({ settings }: { settings: SettingsMap }) {
 
 function Hero({ settings }: { settings: SettingsMap }) {
   return (
-    <section className="relative overflow-hidden py-12 sm:py-20 bg-white dark:bg-gray-900">
-      <div className="absolute inset-0 opacity-5 bg-red-600" />
-      <div className="relative max-w-6xl mx-auto px-4 text-center">
+    <section className="relative overflow-hidden py-12 sm:py-20 bg-white dark:bg-gray-900 text-center">
+      <div className="absolute inset-0 opacity-5 bg-red-600 pointer-events-none" />
+      <div className="relative max-w-6xl mx-auto px-4">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-white mb-6 bg-red-600">
           <Droplet className="w-4 h-4" />
           {settings.site_tagline}
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{settings.hero_headline}</h1>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">{settings.hero_headline}</h1>
         <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">{settings.hero_subheadline}</p>
         
         {/* Contact Cards */}
@@ -104,10 +109,154 @@ function Hero({ settings }: { settings: SettingsMap }) {
                 <span className="text-xs text-gray-500">{c.phone}</span>
               </div>
               <div className="flex gap-2">
-                <a href={`tel:${c.phone}`} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-full hover:bg-red-100"><Phone className="w-5 h-5" /></a>
-                <a href={`https://wa.me/88${c.phone}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-full hover:bg-green-100"><MessageCircle className="w-5 h-5" /></a>
+                <a href={`tel:${c.phone}`} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-full hover:bg-red-100 transition-colors"><Phone className="w-5 h-5" /></a>
+                <a href={`https://wa.me/88${c.phone}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-full hover:bg-green-100 transition-colors"><MessageCircle className="w-5 h-5" /></a>
               </div>
             </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="#donor-form" className="px-8 py-3.5 rounded-xl text-white font-semibold bg-red-600 shadow-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+            <Heart className="w-5 h-5" /> {settings.hero_btn1_label}
+          </a>
+          <a href="#request-form" className="px-8 py-3.5 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <Phone className="w-5 h-5" /> {settings.hero_btn2_label}
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  const stories = [
+    { name: "রাহাত ইসলাম", location: "ঢাকা", text: "এই সাইটের মাধ্যমে খুব দ্রুত ও+ রক্ত পেয়েছি। যারা এই উদ্যোগ নিয়েছেন তাদের ধন্যবাদ।" },
+    { name: "শরিফুল আলম", location: "চট্টগ্রাম", text: "আমি নিয়মিত রক্ত দান করি। এখানে নিবন্ধন করা খুব সহজ এবং নিরাপদ।" }
+  ];
+  return (
+    <section className="py-16 bg-red-50/30 dark:bg-gray-800/20 border-t border-red-50 dark:border-gray-800">
+      <div className="max-w-6xl mx-auto px-4 text-center">
+        <h2 className="text-2xl font-bold mb-10 dark:text-white">ডোনার ও গ্রহীতাদের অভিজ্ঞতা</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {stories.map((s, i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-red-100 dark:border-gray-700 shadow-sm relative text-left">
+              <Quote className="absolute top-4 right-4 w-8 h-8 text-red-100 dark:text-gray-700 opacity-50" />
+              <p className="text-gray-600 dark:text-gray-300 italic mb-4">"{s.text}"</p>
+              <div className="font-bold dark:text-white">{s.name}</div>
+              <div className="text-xs text-gray-500">{s.location}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer({ settings }: { settings: SettingsMap }) {
+  return (
+    <footer className="bg-gray-900 text-gray-300 py-12 pb-24 md:pb-12 border-t border-gray-800">
+      <div className="max-w-6xl mx-auto px-4 text-center">
+        <div className="flex flex-col items-center gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center bg-red-600"><Droplet className="w-5 h-5 text-white" /></div>
+            <div className="font-bold text-white text-lg">{settings.site_name}</div>
+          </div>
+          <p className="text-sm text-gray-400">{settings.footer_tagline}</p>
+        </div>
+        <div className="pt-6 border-t border-gray-800 text-sm text-gray-500">{settings.footer_copyright}</div>
+      </div>
+    </footer>
+  );
+}
+
+export default async function HomePage() {
+  const [settings, counters] = await Promise.all([getSettings(), getLiveCounters()]);
+  return (
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+      <Navbar settings={settings} />
+      <main>
+        <Hero settings={settings} />
+        
+        {settings.show_live_counters === "true" && (
+           <section className="py-10 bg-gray-50 dark:bg-gray-800 border-y border-gray-200 dark:border-gray-700">
+           <div className="max-w-6xl mx-auto px-4">
+             <div className="grid grid-cols-3 gap-4">
+               {[
+                 { label: "নিবন্ধিত দাতা", value: counters.totalDonors, icon: Heart },
+                 { label: "পূরণকৃত অনুরোধ", value: counters.fulfilledRequests, icon: MessageCircle },
+                 { label: "জেলা কভারেজ", value: counters.districtsCount, icon: Users }
+               ].map((st) => (
+                 <div key={st.label} className="text-center">
+                   <div className="inline-flex items-center justify-center w-10 h-10 rounded-full mb-2 bg-red-50 dark:bg-red-900/20 text-red-600"><st.icon className="w-5 h-5" /></div>
+                   <div className="text-xl font-bold dark:text-white">{st.value.toLocaleString("bn-BD")}</div>
+                   <div className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">{st.label}</div>
+                 </div>
+               ))}
+             </div>
+           </div>
+         </section>
+        )}
+
+        <section id="search" className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto px-4">
+            <h2 className="text-2xl font-bold text-center mb-10 dark:text-white">{settings.search_section_title}</h2>
+            <DonorSearch districts={DISTRICTS} bloodGroups={BLOOD_GROUPS} settings={settings} />
+          </div>
+        </section>
+
+        <section id="donor-form" className="py-16 bg-gray-50 dark:bg-gray-800/50 border-y border-gray-100 dark:border-gray-800">
+          <div className="max-w-2xl mx-auto px-4">
+            <h2 className="text-2xl font-bold text-center dark:text-white">{settings.donor_form_title}</h2>
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-10">{settings.donor_form_desc}</p>
+            <DonorRegistrationForm districts={DISTRICTS} bloodGroups={BLOOD_GROUPS} settings={settings} />
+          </div>
+        </section>
+
+        <section id="request-form" className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-2xl mx-auto px-4">
+            <h2 className="text-2xl font-bold text-center dark:text-white">{settings.request_form_title}</h2>
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-10">{settings.request_form_desc}</p>
+            <BloodRequestForm districts={DISTRICTS} bloodGroups={BLOOD_GROUPS} settings={settings} />
+          </div>
+        </section>
+
+        <Testimonials />
+
+        {settings.show_why_donate === "true" && (
+           <section className="py-16 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
+           <div className="max-w-6xl mx-auto px-4">
+             <h2 className="text-2xl font-bold text-center mb-12 dark:text-white">{settings.why_donate_title}</h2>
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+               {[1, 2, 3, 4].map((i) => {
+                 const iconKey = `why_donate_${i}_icon` as keyof SettingsMap;
+                 const textKey = `why_donate_${i}_text` as keyof SettingsMap;
+                 const IconComponent = ICON_MAP[settings[iconKey] as string] ?? Heart;
+                 return (
+                   <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 text-center shadow-sm">
+                     <div className="w-12 h-12 rounded-full mb-4 mx-auto flex items-center justify-center bg-red-50 dark:bg-red-900/20 text-red-600">
+                        <IconComponent className="w-6 h-6" />
+                     </div>
+                     <p className="text-sm text-gray-700 dark:text-gray-300">{settings[textKey] as string}</p>
+                   </div>
+                 );
+               })}
+             </div>
+           </div>
+         </section>
+        )}
+      </main>
+
+      {/* Floating Action Button (Mobile Only) */}
+      <a href="#request-form" className="md:hidden fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 bg-red-600 text-white rounded-full shadow-2xl font-bold hover:scale-105 active:scale-95 transition-transform">
+        <Droplet className="w-5 h-5" />
+        <span>রক্ত চাই</span>
+      </a>
+
+      <Footer settings={settings} />
+    </div>
+  );
+}
           ))}
         </div>
 
