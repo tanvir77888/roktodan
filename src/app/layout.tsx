@@ -41,6 +41,10 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: s.favicon_url
       ? { icon: s.favicon_url }
       : undefined,
+    // গুগল সার্চ কনসোল ভেরিফিকেশন কোড এখানে যোগ করা হলো
+    verification: {
+      google: "-b1iVU6-RA4sFwdIlq-3qdpDSaooR503B7pxXSBHuZQ",
+    },
   };
 }
 
@@ -61,15 +65,12 @@ export default async function RootLayout({
       ? nunito.className
       : inter.className;
 
-  // All three font variables must be on a parent element so next/font
-  // injects the @font-face rules; we attach them to <html>.
   const fontVariables = [
     inter.variable,
     merriweather.variable,
     nunito.variable,
   ].join(" ");
 
-  // Dark mode: add "dark" class when admin has enabled it
   const darkClass = s.dark_mode_enabled === "true" ? "dark" : "";
 
   return (
