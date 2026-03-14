@@ -26,7 +26,7 @@ export default function DeveloperPage() {
             </div>
           </div>
           
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">তানভীর আহমেদ</h1>
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Muhammad Aklasur Rahman Tanvir</h1>
           <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-black uppercase tracking-widest mb-8">
             Visionary & Founder
           </div>
