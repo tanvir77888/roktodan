@@ -1,6 +1,4 @@
 // src/app/page.tsx
-// Restore to Original Design (Screenshot version)
-
 import nextDynamic from "next/dynamic";
 import Image from "next/image";
 import { getSettings } from "@/lib/settings";
@@ -11,12 +9,11 @@ import {
   Heart,
   Users,
   Shield,
-  Award,
   Phone,
   MessageCircle,
-  Facebook,
   Droplet,
-  Quote
+  Quote,
+  Search
 } from "lucide-react";
 
 // ── Dynamic client imports ────────────────────────────────────────────────────
@@ -105,13 +102,21 @@ function Hero({ settings }: { settings: SettingsMap }) {
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="#donor-form" className="px-8 py-3.5 rounded-xl text-white font-semibold bg-red-600 shadow-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-            <Heart className="w-5 h-5" /> {settings.hero_btn1_label}
+        {/* Buttons Section */}
+        <div className="flex flex-col gap-4 max-w-sm mx-auto">
+          {/* New Search Button (Primary) */}
+          <a href="#search" className="w-full px-8 py-4 rounded-2xl text-white font-bold bg-red-600 shadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95">
+            <Search className="w-5 h-5" /> রক্তদাতা খুঁজুন
           </a>
-          <a href="#request-form" className="px-8 py-3.5 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-            <Phone className="w-5 h-5" /> {settings.hero_btn2_label}
-          </a>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <a href="#donor-form" className="flex-1 px-8 py-3.5 rounded-xl text-white font-semibold bg-red-600 shadow-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+              <Heart className="w-5 h-5" /> {settings.hero_btn1_label}
+            </a>
+            <a href="#request-form" className="flex-1 px-8 py-3.5 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <Phone className="w-5 h-5" /> {settings.hero_btn2_label}
+            </a>
+          </div>
         </div>
       </div>
     </section>
