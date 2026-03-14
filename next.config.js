@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // আপনার ইমেজের কনফিগারেশন এখানে থাকল
   images: {
     remotePatterns: [
       {
@@ -10,14 +9,5 @@ const nextConfig = {
       },
     ],
   },
-  
-  // এই অংশটুকু এরর ইগনোর করবে
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 };
-
-export default nextConfig;
+module.exports = nextConfig;
