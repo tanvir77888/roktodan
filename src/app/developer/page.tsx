@@ -1,5 +1,5 @@
 // src/app/developer/page.tsx
-import { Github, Mail, Heart, Code, Award, ArrowLeft, Facebook, Phone, MapPin, User } from "lucide-react";
+import { Github, Mail, Heart, Code, Award, ArrowLeft, Facebook, Phone, MapPin } from "lucide-react";
 
 export default function DeveloperPage() {
   return (
@@ -8,7 +8,7 @@ export default function DeveloperPage() {
       <nav className="p-5 flex items-center justify-between sticky top-0 bg-white/70 dark:bg-gray-950/70 backdrop-blur-lg z-50 border-b border-gray-100 dark:border-gray-800">
         <a href="/" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:text-red-600 transition-all">
           <ArrowLeft className="w-4 h-4" />
-          <span className="font-bold text-xs">Back</span>
+          <span className="font-bold text-xs">ফিরে যান</span>
         </a>
         <div className="h-2 w-2 rounded-full bg-red-600 animate-pulse"></div>
       </nav>
@@ -18,17 +18,20 @@ export default function DeveloperPage() {
         <div className="text-center mb-16">
           <div className="relative inline-block group">
             <div className="absolute inset-0 bg-red-600 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-            {/* ছবির জন্য নিচে src="..." এর জায়গায় আপনার ছবির লিংক দিন */}
+            
+            {/* আপনার ছবি এখানে যুক্ত করা হয়েছে */}
             <div className="relative w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-[2.5rem] mx-auto mb-6 flex items-center justify-center border-4 border-white dark:border-gray-900 shadow-2xl overflow-hidden">
-               <User className="w-12 h-12 text-gray-300" />
-               {/* ছবির জন্য নিচের লাইনটি ব্যবহার করুন: */}
-               {/* <img src="আপনার_ছবির_লিংক" alt="Tanvir" className="w-full h-full object-cover" /> */}
+               <img 
+                 src="https://ibb.co.com/RkJQ58wd" 
+                 alt="Tanvir Ahmed" 
+                 className="w-full h-full object-cover" 
+               />
             </div>
           </div>
           
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Muhammad Aklasur Rahman Tanvir</h1>
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">তানভীর আহমেদ</h1>
           <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-black uppercase tracking-widest mb-8">
-            Visionary & Founder
+            Founder & Visionary
           </div>
           
           {/* অ্যাকশন বাটনসমূহ */}
@@ -48,7 +51,7 @@ export default function DeveloperPage() {
           </div>
         </div>
 
-        {/* ইন্ট্রো সেকশন */}
+        {/* লক্ষ্য সেকশন */}
         <div className="space-y-6">
           <div className="p-8 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -60,26 +63,24 @@ export default function DeveloperPage() {
             </p>
           </div>
 
-          {/* ইনফো কার্ডস */}
           <div className="grid grid-cols-2 gap-4">
             <div className="p-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[2rem] flex flex-col items-center text-center">
               <div className="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center text-red-600 mb-3">
                 <MapPin className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Location</span>
-              <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">Sylhet, Bangladesh</p>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">অবস্থান</span>
+              <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">সিলেট, বাংলাদেশ</p>
             </div>
             <div className="p-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[2rem] flex flex-col items-center text-center">
               <div className="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center text-red-600 mb-3">
                 <Heart className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Passion</span>
-              <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">Social Service</p>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">প্যাশন</span>
+              <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">সমাজসেবা</p>
             </div>
           </div>
         </div>
 
-        {/* ফুটার */}
         <footer className="mt-16 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="h-px w-8 bg-gray-200 dark:bg-gray-800"></div>
