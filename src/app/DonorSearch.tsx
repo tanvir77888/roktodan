@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { District } from "@/lib/geodata";
 import SearchableSelect from "./SearchableSelect";
-import { Search, Phone, MessageCircle } from "lucide-react";
+import { Search, Phone } from "lucide-react";
 
 interface Donor {
   id: string;
@@ -64,7 +64,6 @@ export default function DonorSearch({
 
   return (
     <div className="space-y-6">
-      {/* Search Filters */}
       <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <select
@@ -78,7 +77,7 @@ export default function DonorSearch({
 
           <SearchableSelect
             options={districts.map((d) => ({ value: d.name, label: d.name }))}
-            onChange={(val) => { setDistrict(val); setUpazila(""); }}
+            onChange={(val: string) => { setDistrict(val); setUpazila(""); }}
             placeholder={settings.field_district}
           />
 
@@ -103,12 +102,11 @@ export default function DonorSearch({
         </button>
       </div>
 
-      {/* Results Section */}
       {searched && (
         <div className="space-y-4">
           {donors.length > 0 ? (
             donors.map((donor) => (
-              <div key={donor.id} className="p-5 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 flex justify-between items-center shadow-sm">
+              <div key={donor.id} className="p-5 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 flex justify-between items-center">
                 <div>
                   <h3 className="font-bold text-gray-900 dark:text-white">{donor.name}</h3>
                   <p className="text-xs text-gray-500">{donor.district}, {donor.upazila}</p>
