@@ -29,50 +29,124 @@ export default function BloodRequestForm({
   settings: RequestFormSettings;
 }) {
   const [form, setForm] = useState({
-    patient_name: "", blood_group: "", units: "1", hospital_name: "",
-    district: "", contact_number: "", urgency: "normal", additional_note: "",
-    image_url: "",
+    patient_name: "",
+    blood_group: "",
+    units: "1",
+    hospital_name: "",
+    district: "",
+    contact_number: "",
+    urgency: "normal",
+    additional_note: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const set = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
-
-  async function handleSubmit() {
-    if (!form.patient_name || !form.blood_group || !form.hospital_name || !form.district || !form.contact_number) {
-      setError("সব তথ্য পূরণ করুন।");
+  const handleSubmit = async () => {
+    if (!form.patient_name || !form.blood_group || !form.district || !form.contact_number) {
+      setError("দয়া করে প্রয়োজনীয় সব তথ্য দিন।");
       return;
     }
+    
     setLoading(true);
+    setError("");
+    
     try {
-      const res = await fetch("/api/requests", {
+      const response = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, units: parseInt(form.units, 10) }),
+        body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (data.success) {
+
+      if (response.ok) {
         setSuccess(true);
-        setForm({ patient_name: "", blood_group: "", units: "1", hospital_name: "", district: "", contact_number: "", urgency: "normal", additional_note: "", image_url: "" });
+        setForm({
+          patient_name: "",
+          blood_group: "",
+          units: "1",
+          hospital_name: "",
+          district: "",
+          contact_number: "",
+          urgency: "normal",
+          additional_note: "",
+        });
+      } else {
+        setError("দুঃখিত, অনুরোধটি পাঠানো সম্ভব হয়নি।");
       }
-    } catch { setError("সমস্যা হয়েছে।"); }
-    finally { setLoading(false); }
-  }
+    } catch (err) {
+      setError("সার্ভারে সমস্যা হয়েছে, আবার চেষ্টা করুন।");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      {success && <p className="text-green-600 text-sm">{settings.request_success_msg}</p>}
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <input type="text" placeholder={settings.field_patientname} value={form.patient_name} onChange={(e) => set("patient_name", e.target.value)} className="w-full p-2 border rounded dark:bg-gray-800" />
-      <select value={form.blood_group} onChange={(e) => set("blood_group", e.target.value)} className="w-full p-2 border rounded dark:bg-gray-800">
-        <option value="">গ্রুপ বেছে নিন</option>
-        {bloodGroups.map((g) => <option key={g} value={g}>{g}</option>)}
-      </select>
-      <input type="text" placeholder={settings.field_hospital} value={form.hospital_name} onChange={(e) => set("hospital_name", e.target.value)} className="w-full p-2 border rounded dark:bg-gray-800" />
-      <SearchableSelect value={form.district} onChange={(val) => set("district", val)} options={districts.map((d) => ({ value: d.name, label: d.name }))} placeholder={settings.field_district} />
-      <input type="tel" placeholder={settings.field_contact} value={form.contact_number} onChange={(e) => set("contact_number", e.target.value)} className="w-full p-2 border rounded dark:bg-gray-800" />
-      <button onClick={handleSubmit} disabled={loading} className="w-full py-3 bg-red-600 text-white rounded-xl font-bold">{loading ? "অপেক্ষা করুন..." : "অনুরোধ পাঠান"}</button>
+    <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4 shadow-sm">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">রক্তের অনুরোধ পাঠান</h2>
+      
+      {success && (
+        <div className="p-3 bg-green-100 text-green-700 rounded-xl text-sm mb-4">
+          {settings.request_success_msg}
+        </div>
+      )}
+      
+      {error && (
+        <div className="p-3 bg-red-100 text-red-700 rounded-xl text-sm mb-4">
+          {error}
+        </div>
+      )}
+
+      <input
+        type="text"
+        placeholder={settings.field_patientname}
+        className="w-full p-3 rounded-xl border bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+        value={form.patient_name}
+        onChange={(e) => setForm({ ...form, patient_name: e.target.value })}
+      />
+
+      <div className="grid grid-cols-2 gap-4">
+        <select
+          className="p-3 rounded-xl border bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+          value={form.blood_group}
+          onChange={(e) => setForm({ ...form, blood_group: e.target.value })}
+        >
+          <option value="">{settings.field_bloodgroup}</option>
+          {bloodGroups.map((bg) => (
+            <option key={bg} value={bg}>{bg}</option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          placeholder={settings.field_units}
+          className="p-3 rounded-xl border bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+          value={form.units}
+          onChange={(e) => setForm({ ...form, units: e.target.value })}
+        />
+      </div>
+
+      <SearchableSelect
+        options={districts.map((d) => ({ value: d.name, label: d.name }))}
+        onChange={(val: string) => setForm({ ...form, district: val })}
+        placeholder={settings.field_district}
+      />
+
+      <input
+        type="tel"
+        placeholder={settings.field_contact}
+        className="w-full p-3 rounded-xl border bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+        value={form.contact_number}
+        onChange={(e) => setForm({ ...form, contact_number: e.target.value })}
+      />
+
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all disabled:opacity-50 shadow-lg shadow-red-200 dark:shadow-none"
+      >
+        {loading ? "লোডিং..." : "অনুরোধ পাঠান"}
+      </button>
     </div>
   );
 }
