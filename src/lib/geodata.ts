@@ -3,11 +3,9 @@ export interface District {
   upazilas: string[];
 }
 
-// BLOOD_GROUPS কে বদলে bloodGroups করা হয়েছে
-export const bloodGroups: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+export const BLOOD_GROUPS: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-// DISTRICTS কে বদলে districts করা হয়েছে
-export const districts: District[] = [
+export const DISTRICTS: District[] = [
   {
     name: 'ঢাকা',
     upazilas: [
@@ -89,7 +87,7 @@ export const districts: District[] = [
     upazilas: [
       'আনোয়ারা', 'বাঁশখালী', 'বোয়ালখালী', 'চন্দনাইশ', 'চট্টগ্রাম সদর',
       'ফটিকছড়ি', 'হাটহাজারী', 'কর্ণফুলী', 'লোহাগাড়া', 'মিরসরাই',
-      'পটিয়া', 'রাঙ্গুনিয়া', 'রাউজান', 'সন্দীপ', 'সাতকানিয়া',
+      'পটিয়া', 'রাঙ্গুনিয়া', 'রাউজান', 'সন্দ্বীপ', 'সাতকানিয়া',
       'সীতাকুণ্ড',
     ],
   },
@@ -197,7 +195,7 @@ export const districts: District[] = [
   {
     name: 'খুলনা',
     upazilas: [
-      'বটিয়াঘাটা', 'দাকোপ', 'ডুমুরিয়া', 'ফুলতলা', 'কয়রা',
+      'বটিয়াঘাটা', 'দাকোপ', 'ডুমুরিয়া', 'ফুলতলা', 'কয়রা',
       'খুলনা সদর', 'পাইকগাছা', 'রূপসা', 'তেরখাদা',
     ],
   },
@@ -399,7 +397,6 @@ export const districts: District[] = [
 ];
 
 export function getUpazilasByDistrict(districtName: string): string[] {
-  // এখানেও districts ছোট হাতের অক্ষরে ডাকা হয়েছে
-  const district = districts.find((d) => d.name === districtName);
+  const district = DISTRICTS.find((d) => d.name === districtName);
   return district ? district.upazilas : [];
-  }
+}
