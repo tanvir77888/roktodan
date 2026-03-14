@@ -50,7 +50,7 @@ export default function DeveloperPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#050505] transition-colors duration-500 font-sans overflow-x-hidden text-gray-900 dark:text-white">
       <nav className="p-6 flex items-center justify-between sticky top-0 bg-white/60 dark:bg-black/60 backdrop-blur-xl z-50 border-b border-gray-100 dark:border-white/5">
-        <a href="/" className="group flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-white/5 shadow-sm border border-gray-100 dark:border-white/10 hover:border-red-500 transition-all">
+        <a href="/" className="group flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-white/5 shadow-sm border border-gray-100 dark:border-white/10 hover:border-red-50 transition-all">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="font-bold text-xs">ফিরে যান</span>
         </a>
@@ -70,16 +70,16 @@ export default function DeveloperPage() {
             </div>
           </div>
           
-          <h1 className="text-4xl font-black mb-3 tracking-tight">তানভীর আহমেদ</h1>
+          <h1 className="text-4xl font-black mb-3 tracking-tight tracking-tight">তানভীর আহমেদ</h1>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm text-red-600 text-[10px] font-black uppercase tracking-widest mb-10">
             <Sparkles className="w-3 h-3" /> Founder & Visionary
           </div>
           
           <div className="grid grid-cols-4 gap-4 max-w-sm mx-auto">
-            <a href="https://facebook.com/tanvir.ahmed.fb" target="_blank" className="flex items-center justify-center p-4 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-[1.5rem] hover:-translate-y-1 transition-all shadow-sm"><Facebook className="w-6 h-6" /></a>
-            <a href="tel:01403520600" className="flex items-center justify-center p-4 bg-green-50 dark:bg-green-500/10 text-green-600 rounded-[1.5rem] hover:-translate-y-1 transition-all shadow-sm"><Phone className="w-6 h-6" /></a>
-            <a href="mailto:thanvirteach01@gmail.com" className="flex items-center justify-center p-4 bg-red-50 dark:bg-red-900/10 text-red-600 rounded-[1.5rem] hover:-translate-y-1 transition-all shadow-sm"><Mail className="w-6 h-6" /></a>
-            <a href="https://github.com/tanvir77888" target="_blank" className="flex items-center justify-center p-4 bg-gray-100 dark:bg-white/10 rounded-[1.5rem] hover:-translate-y-1 transition-all shadow-sm"><Github className="w-6 h-6" /></a>
+            <a href="https://facebook.com/tanvir.ahmed.fb" target="_blank" className="flex items-center justify-center p-4 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-[1.5rem] hover:-translate-y-1 transition-all"><Facebook className="w-6 h-6" /></a>
+            <a href="tel:01403520600" className="flex items-center justify-center p-4 bg-green-50 dark:bg-green-500/10 text-green-600 rounded-[1.5rem] hover:-translate-y-1 transition-all"><Phone className="w-6 h-6" /></a>
+            <a href="mailto:thanvirteach01@gmail.com" className="flex items-center justify-center p-4 bg-red-50 dark:bg-red-900/10 text-red-600 rounded-[1.5rem] hover:-translate-y-1 transition-all"><Mail className="w-6 h-6" /></a>
+            <a href="https://github.com/tanvir77888" target="_blank" className="flex items-center justify-center p-4 bg-gray-100 dark:bg-white/10 rounded-[1.5rem] hover:-translate-y-1 transition-all"><Github className="w-6 h-6" /></a>
           </div>
         </div>
 
@@ -117,37 +117,13 @@ export default function DeveloperPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="p-6 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2.5rem] flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-red-50 dark:bg-red-500/10 rounded-2xl flex items-center justify-center text-red-600 mb-4"><MapPin className="w-6 h-6" /></div>
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">অবস্থান</span>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-gray-400">অবস্থান</span>
             <p className="text-sm font-bold mt-1">সিলেট, বাংলাদেশ</p>
           </div>
           <div className="p-6 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2.5rem] flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-red-50 dark:bg-red-500/10 rounded-2xl flex items-center justify-center text-red-600 mb-4"><Heart className="w-6 h-6" /></div>
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">প্যাশন</span>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-gray-400">প্যাশন</span>
             <p className="text-sm font-bold mt-1">সমাজসেবা</p>
-          </div>
-        </div>
-
-        <footer className="mt-20 pb-10 text-center">
-          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-400">
-            <Award className="w-4 h-4 text-yellow-500" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em]">DESIGNED FOR HUMANITY</span>
-          </div>
-        </footer>
-      </main>
-    </div>
-  );
-}
-        {/* নিচের স্ট্যাটিক ইনফো */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-6 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2.5rem] flex flex-col items-center text-center">
-            <div className="w-12 h-12 bg-red-50 dark:bg-red-500/10 rounded-2xl flex items-center justify-center text-red-600 mb-4"><MapPin className="w-6 h-6" /></div>
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">অবস্থান</span>
-            <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">সিলেট, বাংলাদেশ</p>
-          </div>
-          <div className="p-6 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2.5rem] flex flex-col items-center text-center">
-            <div className="w-12 h-12 bg-red-50 dark:bg-red-500/10 rounded-2xl flex items-center justify-center text-red-600 mb-4"><Heart className="w-6 h-6" /></div>
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">প্যাশন</span>
-            <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">সমাজসেবা</p>
           </div>
         </div>
 
