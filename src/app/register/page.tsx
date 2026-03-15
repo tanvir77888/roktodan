@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import DonorRegistrationForm from "../DonorRegistrationForm"; // পাথ ঠিক করা হয়েছে
+import DonorRegistrationForm from "../DonorRegistrationForm"; 
 import { getSettings } from "@/lib/settings";
 import { DISTRICTS, BLOOD_GROUPS } from "@/lib/geodata";
 import { ArrowLeft } from "lucide-react";
@@ -23,7 +23,6 @@ export default function RegisterPage() {
           <ArrowLeft className="w-4 h-4" /> ফিরে যান
         </Link>
         <h2 className="text-3xl font-bold mb-4 dark:text-white text-center">রক্তদাতা হিসেবে নিবন্ধন করুন</h2>
-        <p className="text-center text-gray-600 dark:text-gray-400 mb-8">আপনার সামান্য রক্তদান বাঁচাতে পারে একটি প্রাণ।</p>
         <DonorRegistrationForm districts={DISTRICTS} bloodGroups={BLOOD_GROUPS} settings={settings} />
       </div>
     </div>
