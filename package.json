@@ -1,0 +1,36 @@
+{
+  "name": "roktho-bondhon",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "@tailwindcss/forms": "^0.5.11",
+    "cloudinary": "^2.5.1",
+    "date-fns": "^4.1.0",
+    "jose": "^5.9.6",
+    "lucide-react": "^0.468.0",
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "autoprefixer": "^10.4.27",
+    "eslint": "8.57.1",
+    "eslint-config-next": "14.2.29",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.7.3"
+  }
+}
