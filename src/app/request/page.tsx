@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import BloodRequestForm from "../BloodRequestForm"; // পাথ ঠিক করা হয়েছে
+import BloodRequestForm from "../BloodRequestForm"; 
 import { getSettings } from "@/lib/settings";
 import { DISTRICTS, BLOOD_GROUPS } from "@/lib/geodata";
 import { ArrowLeft } from "lucide-react";
@@ -23,7 +23,6 @@ export default function RequestPage() {
           <ArrowLeft className="w-4 h-4" /> ফিরে যান
         </Link>
         <h2 className="text-3xl font-bold mb-4 dark:text-white text-center">রক্তের জন্য অনুরোধ করুন</h2>
-        <p className="text-center text-gray-600 dark:text-gray-400 mb-8">জরুরি প্রয়োজনে সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন।</p>
         <BloodRequestForm districts={DISTRICTS} bloodGroups={BLOOD_GROUPS} settings={settings} />
       </div>
     </div>
