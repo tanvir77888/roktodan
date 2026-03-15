@@ -14,7 +14,7 @@ export default function RequestPage() {
     getSettings().then(setSettings);
   }, []);
 
-  if (!settings) return null;
+  if (!settings) return <div className="p-10 text-center">লোড হচ্ছে...</div>;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 py-10">
