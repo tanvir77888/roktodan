@@ -70,7 +70,7 @@ export default function DeveloperPage() {
             </div>
           </div>
           
-          <h1 className="text-4xl font-black mb-3 tracking-tight tracking-tight">তানভীর আহমেদ</h1>
+          <h1 className="text-4xl font-black mb-3 tracking-tight tracking-tight">MUHAMMAD AKLASUR RAHMAN TANVIR</h1>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm text-red-600 text-[10px] font-black uppercase tracking-widest mb-10">
             <Sparkles className="w-3 h-3" /> Founder & Visionary
           </div>
