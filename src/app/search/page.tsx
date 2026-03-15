@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import DonorSearch from "../DonorSearch"; // পাথ ঠিক করা হয়েছে
+import DonorSearch from "../DonorSearch"; 
 import { getSettings } from "@/lib/settings";
 import { DISTRICTS, BLOOD_GROUPS } from "@/lib/geodata";
 import { ArrowLeft } from "lucide-react";
