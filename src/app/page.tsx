@@ -18,7 +18,6 @@ import {
 const DarkModeToggle = nextDynamic(() => import("./DarkModeToggle"), { ssr: false });
 const MobileMenu = nextDynamic(() => import("./MobileMenu"), { ssr: false });
 
-// নিচে আমরা স্লাইডারের জন্য একটি ক্লায়েন্ট সেকশন তৈরি করছি
 const TestimonialsSlider = nextDynamic(() => import("./TestimonialsSlider"), { 
   ssr: false,
   loading: () => <div className="h-40 flex items-center justify-center text-gray-400">অপেক্ষা করুন...</div>
@@ -74,7 +73,8 @@ function Navbar({ settings }: { settings: SettingsMap }) {
 
 function Hero({ settings }: { settings: SettingsMap }) {
   return (
-    <section className="relative overflow-hidden py-12 sm:py-20 bg-white dark:bg-gray-900 text-center">
+    // এখানে এনিমেশন ক্লাস (animate-in) যোগ করা হয়েছে
+    <section className="relative overflow-hidden py-12 sm:py-20 bg-white dark:bg-gray-900 text-center animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <div className="absolute inset-0 opacity-5 bg-red-600 pointer-events-none" />
       <div className="relative max-w-6xl mx-auto px-4">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-white mb-6 bg-red-600">
@@ -90,7 +90,7 @@ function Hero({ settings }: { settings: SettingsMap }) {
             { name: "Tanvir", phone: "01403520600" },
             { name: "Akash", phone: "01619720600" }
           ].map((c) => (
-            <div key={c.phone} className="flex items-center justify-between bg-white dark:bg-gray-800 border border-red-100 dark:border-red-900/30 p-3 rounded-2xl shadow-sm">
+            <div key={c.phone} className="flex items-center justify-between bg-white dark:bg-gray-800 border border-red-100 dark:border-red-900/30 p-3 rounded-2xl shadow-sm hover:scale-105 transition-transform duration-300">
               <div className="flex flex-col text-left">
                 <span className="font-bold text-gray-800 dark:text-gray-100">{c.name}</span>
                 <span className="text-xs text-gray-500">{c.phone}</span>
@@ -103,17 +103,17 @@ function Hero({ settings }: { settings: SettingsMap }) {
           ))}
         </div>
 
-        {/* Buttons Section (Modified for Navigation) */}
+        {/* Buttons Section */}
         <div className="flex flex-col gap-4 max-w-sm mx-auto">
-          <Link href="/search" className="w-full px-8 py-4 rounded-2xl text-white font-bold bg-red-600 shadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95">
+          <Link href="/search" className="w-full px-8 py-4 rounded-2xl text-white font-bold bg-red-600 shadow-lg flex items-center justify-center gap-2 hover:bg-red-700 hover:-translate-y-1 transition-all active:scale-95">
             <Search className="w-5 h-5" /> রক্তদাতা খুঁজুন
           </Link>
           
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/register" className="flex-1 px-8 py-3.5 rounded-xl text-white font-semibold bg-red-600 shadow-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+            <Link href="/register" className="flex-1 px-8 py-3.5 rounded-xl text-white font-semibold bg-red-600 shadow-md flex items-center justify-center gap-2 hover:bg-red-700 transition-all">
               <Heart className="w-5 h-5" /> রক্ত দিন
             </Link>
-            <Link href="/request" className="flex-1 px-8 py-3.5 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <Link href="/request" className="flex-1 px-8 py-3.5 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
               <Phone className="w-5 h-5" /> রক্ত চান
             </Link>
           </div>
@@ -132,7 +132,7 @@ export default async function HomePage() {
         <Hero settings={settings} />
         
         {/* Live Counters */}
-        <section className="py-10 bg-gray-50 dark:bg-gray-800 border-y border-gray-200 dark:border-gray-700">
+        <section className="py-10 bg-gray-50 dark:bg-gray-800 border-y border-gray-200 dark:border-gray-700 animate-in fade-in duration-1000 delay-300">
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-3 gap-4">
               {[
@@ -150,9 +150,14 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Testimonials section with dynamic slider */}
         <TestimonialsSlider />
       </main>
+
+      {/* Floating Button Animation */}
+      <Link href="/request" className="md:hidden fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 bg-red-600 text-white rounded-full shadow-2xl font-bold animate-bounce hover:animate-none transition-transform">
+        <Droplet className="w-5 h-5" />
+        <span>রক্ত চাই</span>
+      </Link>
 
       <footer className="bg-gray-900 text-gray-300 py-12 border-t border-gray-800 text-center">
         <div className="max-w-6xl mx-auto px-4">
