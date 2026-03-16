@@ -6,6 +6,8 @@
 
 /* ============================================================
    CSS CUSTOM PROPERTIES
+   --color-primary is overridden by inline style on <html>
+   from settings at render time (see src/app/layout.tsx)
    ============================================================ */
 :root {
   --color-primary: #DC2626;
@@ -30,13 +32,14 @@
     font-family: var(--font-inter), system-ui, sans-serif;
   }
 
+  /* Ensure Bengali and Latin text render cleanly */
   * {
     @apply box-border;
   }
 }
 
 /* ============================================================
-   CUSTOM SCROLLBAR
+   CUSTOM SCROLLBAR — admin tables and sidebars (webkit only)
    ============================================================ */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
@@ -57,53 +60,16 @@
   background: #94a3b8;
 }
 
-/* ============================================================
-   ANIMATIONS — তানভীর ভাইর জন্য স্পেশাল এনিমেশন
-   ============================================================ */
-@keyframes fadeInSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-in {
-  animation: fadeInSlideUp 0.8s ease-out forwards;
-}
-
-/* একটু দেরি করে আসার জন্য (Delay) */
-.delay-300 {
-  animation-delay: 0.3s;
-}
-
-/* বাটন লাফালাফি করার জন্য (Bounce) */
-@keyframes soft-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-bounce-slow {
-  animation: soft-bounce 2s infinite;
+/* Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
 /* ============================================================
-   AVAILABILITY PULSE DOT
+   AVAILABILITY PULSE DOT — green pulsing indicator
+   Used on donor cards when status is "Available"
    ============================================================ */
-@keyframes pulse-dot {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.4;
-    transform: scale(0.85);
-  }
-}
-
 @layer utilities {
   .animate-pulse-dot {
     display: inline-block;
@@ -115,19 +81,41 @@
   }
 }
 
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
 /* ============================================================
-   COMPONENTS & PRINT
+   PRINT STYLES
+   Hide navigation and admin chrome when printing
    ============================================================ */
+@media print {
+  nav,
+  aside,
+  [data-sidebar],
+  [data-navbar] {
+    display: none !important;
+  }
+
+  body {
+    @apply text-black bg-white;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
 @layer components {
   .input-base {
     @apply w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)];
   }
-}
-
-@media print {
-  nav, aside, [data-sidebar], [data-navbar] {
-    display: none !important;
-  }
-  body { @apply text-black bg-white; }
-  main { margin: 0 !important; padding: 0 !important; }
 }
