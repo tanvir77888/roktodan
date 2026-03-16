@@ -1,0 +1,121 @@
+/* src/app/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES
+   --color-primary is overridden by inline style on <html>
+   from settings at render time (see src/app/layout.tsx)
+   ============================================================ */
+:root {
+  --color-primary: #DC2626;
+  --menu-surface: #ffffff;
+}
+
+:root.dark {
+  --menu-surface: #111827;
+}
+
+/* ============================================================
+   BASE LAYER
+   ============================================================ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-gray-900 antialiased;
+    @apply dark:bg-gray-900 dark:text-gray-100;
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  /* Ensure Bengali and Latin text render cleanly */
+  * {
+    @apply box-border;
+  }
+}
+
+/* ============================================================
+   CUSTOM SCROLLBAR — admin tables and sidebars (webkit only)
+   ============================================================ */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* ============================================================
+   AVAILABILITY PULSE DOT — green pulsing indicator
+   Used on donor cards when status is "Available"
+   ============================================================ */
+@layer utilities {
+  .animate-pulse-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #16a34a;
+    animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+/* ============================================================
+   PRINT STYLES
+   Hide navigation and admin chrome when printing
+   ============================================================ */
+@media print {
+  nav,
+  aside,
+  [data-sidebar],
+  [data-navbar] {
+    display: none !important;
+  }
+
+  body {
+    @apply text-black bg-white;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+@layer components {
+  .input-base {
+    @apply w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)];
+  }
+}
