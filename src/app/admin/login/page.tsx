@@ -8,8 +8,8 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, admin] = useState('');
+  const [password, admin123] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
