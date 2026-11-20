@@ -47,6 +47,7 @@ export default async function AdminDashboardPage() {
     fulfilledRequestsResult,
     rejectedRequestsResult,
     activityResult,
+    groupCountsResult,
   ] = await Promise.all([
     sql`SELECT COUNT(*)::text AS count FROM donors WHERE status = 'approved'` as unknown as Promise<StatRow[]>,
     sql`SELECT COUNT(*)::text AS count FROM donors WHERE status = 'pending'` as unknown as Promise<StatRow[]>,
@@ -77,7 +78,14 @@ export default async function AdminDashboardPage() {
       ORDER BY created_at DESC
       LIMIT 20
     ` as unknown as Promise<ActivityRow[]>,
+    sql`SELECT blood_group, COUNT(*)::text AS count FROM donors WHERE status = 'approved' GROUP BY blood_group` as unknown as Promise<Array<{ blood_group: string; count: string }>>,
   ]);
+
+  const BLOOD_GROUPS_ALL = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  const groupCounts: Record<string, number> = {};
+  for (const g of BLOOD_GROUPS_ALL) groupCounts[g] = 0;
+  for (const row of groupCountsResult) groupCounts[row.blood_group] = parseInt(row.count, 10);
+  const lowGroups = BLOOD_GROUPS_ALL.filter((g) => groupCounts[g] < 10);
 
   const stats = {
     approvedDonors: parseInt(approvedDonorsResult[0]?.count ?? "0", 10),
@@ -161,6 +169,32 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Donors by blood group */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+          <h2 className="text-base font-semibold text-gray-900 mb-1">রক্তের গ্রুপ অনুযায়ী ডোনার</h2>
+          {lowGroups.length > 0 && (
+            <p className="text-sm text-red-600 mb-3">
+              ⚠️ এই গ্রুপগুলোতে ডোনার কম আছে: {lowGroups.join(", ")} — এই গ্রুপে নিবন্ধন বাড়াতে জোর দিন।
+            </p>
+          )}
+          <div className="grid grid-cols-4 gap-3">
+            {BLOOD_GROUPS_ALL.map((g) => (
+              <div
+                key={g}
+                className={`rounded-lg border p-3 text-center ${
+                  groupCounts[g] < 10 ? "border-red-300 bg-red-50" : "border-gray-200 bg-gray-50"
+                }`}
+              >
+                <div className="text-lg font-bold text-gray-900">{g}</div>
+                <div className={`text-sm font-semibold ${groupCounts[g] < 10 ? "text-red-600" : "text-gray-600"}`}>
+                  {groupCounts[g]} জন
+                </div>
+                {groupCounts[g] < 10 && <div className="text-[11px] text-red-500">কম আছে</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Recent Activity */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">

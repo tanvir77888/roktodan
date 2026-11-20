@@ -88,8 +88,8 @@ function Hero({ settings }: { settings: SettingsMap }) {
         {/* Contact Cards */}
         <div className="flex flex-col gap-3 mb-10 max-w-xs mx-auto">
           {[
-            { name: "Tanvir", phone: "01403520600" },
-            { name: "Akash", phone: "01619720600" }
+            { name: settings.helpline_1_name || "Tanvir", phone: settings.helpline_1_phone || "01403520600" },
+            { name: settings.helpline_2_name || "Akash", phone: settings.helpline_2_phone || "01619720600" }
           ].map((c) => (
             <div key={c.phone} className="flex items-center justify-between bg-white dark:bg-gray-800 border border-red-100 dark:border-red-900/30 p-3 rounded-2xl shadow-sm">
               <div className="flex flex-col text-left">
@@ -154,6 +154,11 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       <Navbar settings={settings} />
+      {settings.announcement_enabled === "true" && settings.announcement_text && (
+        <div className="bg-amber-400 text-gray-900 text-center text-sm font-semibold px-4 py-2.5">
+          📢 {settings.announcement_text}
+        </div>
+      )}
       <main>
         <Hero settings={settings} />
         
@@ -214,6 +219,20 @@ export default async function HomePage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="font-bold text-white text-lg mb-2">{settings.site_name}</div>
           <p className="text-sm text-gray-400 mb-6">{settings.footer_tagline}</p>
+          {(settings.whatsapp_url || settings.facebook_url) && (
+            <div className="flex justify-center gap-3 mb-6">
+              {settings.whatsapp_url && (
+                <a href={settings.whatsapp_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-green-600 text-white hover:opacity-90">
+                  <MessageCircle className="w-4 h-4" /> WhatsApp-এ যোগাযোগ
+                </a>
+              )}
+              {settings.facebook_url && (
+                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-blue-600 text-white hover:opacity-90">
+                  Facebook পেজ
+                </a>
+              )}
+            </div>
+          )}
           <div className="pt-6 border-t border-gray-800 text-sm text-gray-500">{settings.footer_copyright}</div>
         </div>
       </footer>

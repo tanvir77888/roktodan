@@ -36,6 +36,12 @@ interface SettingsForm {
   dark_mode_enabled: string;
   // Content — Hero
   hero_headline: string;
+  helpline_1_name: string;
+  helpline_1_phone: string;
+  helpline_2_name: string;
+  helpline_2_phone: string;
+  announcement_enabled: string;
+  announcement_text: string;
   hero_subheadline: string;
   hero_btn1_label: string;
   hero_btn2_label: string;
@@ -145,6 +151,12 @@ const DEFAULT_FORM: SettingsForm = {
   font_family: "inter",
   dark_mode_enabled: "false",
   hero_headline: "",
+  helpline_1_name: "",
+  helpline_1_phone: "",
+  helpline_2_name: "",
+  helpline_2_phone: "",
+  announcement_enabled: "false",
+  announcement_text: "",
   hero_subheadline: "",
   hero_btn1_label: "",
   hero_btn2_label: "",
@@ -420,6 +432,12 @@ export default function AdminSettingsPage() {
           font_family: s.font_family ?? "inter",
           dark_mode_enabled: s.dark_mode_enabled ?? "false",
           hero_headline: s.hero_headline ?? "",
+          helpline_1_name: s.helpline_1_name ?? "",
+          helpline_1_phone: s.helpline_1_phone ?? "",
+          helpline_2_name: s.helpline_2_name ?? "",
+          helpline_2_phone: s.helpline_2_phone ?? "",
+          announcement_enabled: s.announcement_enabled ?? "false",
+          announcement_text: s.announcement_text ?? "",
           hero_subheadline: s.hero_subheadline ?? "",
           hero_btn1_label: s.hero_btn1_label ?? "",
           hero_btn2_label: s.hero_btn2_label ?? "",
@@ -934,6 +952,44 @@ const err = await res.json().catch(() => ({}));
                 />
               </FormField>
             </div>
+          </div>
+        </SectionCard>
+
+        {/* Helpline & Announcement */}
+        <SectionCard title="Helpline & Announcement (হেল্পলাইন ও ঘোষণা)">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Helpline 1 — Name">
+                <TextInput value={form.helpline_1_name} onChange={(v) => setField("helpline_1_name", v)} placeholder="Tanvir" />
+              </FormField>
+              <FormField label="Helpline 1 — Phone">
+                <TextInput value={form.helpline_1_phone} onChange={(v) => setField("helpline_1_phone", v)} placeholder="01403520600" />
+              </FormField>
+              <FormField label="Helpline 2 — Name">
+                <TextInput value={form.helpline_2_name} onChange={(v) => setField("helpline_2_name", v)} placeholder="Akash" />
+              </FormField>
+              <FormField label="Helpline 2 — Phone">
+                <TextInput value={form.helpline_2_phone} onChange={(v) => setField("helpline_2_phone", v)} placeholder="01619720600" />
+              </FormField>
+            </div>
+            <ToggleSwitch
+              checked={boolStr(form.announcement_enabled)}
+              onChange={(v) => setField("announcement_enabled", v ? "true" : "false")}
+              label="Announcement Banner"
+              description="Show an announcement bar at the top of the homepage"
+            />
+            <FormField label="Announcement Text (ঘোষণা)">
+              <TextInput value={form.announcement_text} onChange={(v) => setField("announcement_text", v)} placeholder="যেমন: আগামী শুক্রবার হবিগঞ্জে রক্তদান ক্যাম্প" />
+            </FormField>
+            <SaveSectionButton
+              onClick={() =>
+                saveKeys(
+                  ["helpline_1_name", "helpline_1_phone", "helpline_2_name", "helpline_2_phone", "announcement_enabled", "announcement_text"],
+                  "helpline"
+                )
+              }
+              loading={savingSection === "helpline"}
+            />
           </div>
         </SectionCard>
 

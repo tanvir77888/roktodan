@@ -33,6 +33,12 @@ export interface SettingsMap {
   footer_copyright: string;
   facebook_url: string;
   whatsapp_url: string;
+  helpline_1_name: string;
+  helpline_1_phone: string;
+  helpline_2_name: string;
+  helpline_2_phone: string;
+  announcement_enabled: string;
+  announcement_text: string;
   email_address: string;
   show_live_counters: string;
   show_why_donate: string;
@@ -111,6 +117,12 @@ export async function getSettings(): Promise<SettingsMap> {
     footer_copyright: map.footer_copyright ?? "",
     facebook_url: map.facebook_url ?? "",
     whatsapp_url: map.whatsapp_url ?? "",
+    helpline_1_name: map.helpline_1_name || "Tanvir",
+    helpline_1_phone: map.helpline_1_phone || "01403520600",
+    helpline_2_name: map.helpline_2_name || "Akash",
+    helpline_2_phone: map.helpline_2_phone || "01619720600",
+    announcement_enabled: map.announcement_enabled ?? "false",
+    announcement_text: map.announcement_text ?? "",
     email_address: map.email_address ?? "",
     show_live_counters: map.show_live_counters ?? "true",
     show_why_donate: map.show_why_donate ?? "true",

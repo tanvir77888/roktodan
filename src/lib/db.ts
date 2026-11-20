@@ -199,4 +199,7 @@ export async function runMigration(): Promise<void> {
   await sql`ALTER TABLE blood_requests ADD COLUMN IF NOT EXISTS needed_by TIMESTAMPTZ`;
   await sql`ALTER TABLE blood_requests DROP CONSTRAINT IF EXISTS blood_requests_status_check`;
   await sql`ALTER TABLE blood_requests ADD CONSTRAINT blood_requests_status_check CHECK (status IN ('pending','approved','fulfilled','rejected'))`;
+
+  // Site WhatsApp (admin number 01403520600) — set once if still empty
+  await sql`UPDATE settings SET value = 'https://wa.me/8801403520600' WHERE key = 'whatsapp_url' AND (value IS NULL OR value = '')`;
 }
