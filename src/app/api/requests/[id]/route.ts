@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
 
-const ALLOWED_STATUSES = ["fulfilled", "rejected"] as const;
+const ALLOWED_STATUSES = ["approved", "fulfilled", "rejected"] as const;
 type AllowedStatus = (typeof ALLOWED_STATUSES)[number];
 
 async function requireAdmin(): Promise<boolean> {

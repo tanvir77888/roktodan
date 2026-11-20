@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql, neon } from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
+import { randomUUID } from "crypto";
 
 const db = neon(process.env.DATABASE_URL!);
 
@@ -25,6 +26,23 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const { searchParams } = new URL(request.url);
+
+    // Public live-board mode: only admin-approved requests, no auth needed.
+    if (searchParams.get("public") === "1") {
+      const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10)));
+      const rows = await sql`
+        SELECT id, patient_name, blood_group, units, hospital_name, district,
+               contact_number, urgency, additional_note, needed_by, created_at
+        FROM blood_requests
+        WHERE status = 'approved'
+        ORDER BY CASE urgency WHEN 'critical' THEN 0 WHEN 'moderate' THEN 1 ELSE 2 END,
+                 created_at DESC
+        LIMIT ${limit}
+      `;
+      return NextResponse.json({ success: true, data: { requests: rows, total: rows.length } });
+    }
+
     const isAdmin = await isAdminRequest(request);
     console.log("[GET /api/requests] isAdmin:", isAdmin, "cookie:", request.cookies.get("rb_session")?.value?.slice(0, 20));
     if (!isAdmin) {
@@ -34,7 +52,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") ?? "";
     const bloodGroup = searchParams.get("bloodGroup") ?? "";
     const district = searchParams.get("district") ?? "";
@@ -48,7 +65,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const params: unknown[] = [];
     let paramIndex = 1;
 
-    if (status && ["pending", "fulfilled", "rejected"].includes(status)) {
+    if (status && ["pending", "approved", "fulfilled", "rejected"].includes(status)) {
       conditions.push(`status = $${paramIndex++}`);
       params.push(status);
     }
@@ -90,7 +107,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       SELECT
         id, patient_name, blood_group, units, hospital_name,
         district, contact_number, urgency, additional_note,
-        image_url, status, created_at
+        image_url, status, needed_by, created_at
       FROM blood_requests
       ${whereClause}
       ${orderClause}
@@ -238,6 +255,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         ? data.image_url.trim()
         : null;
 
+    // needed_by (optional): when the blood is needed by
+    const neededByRaw = typeof data.needed_by === "string" ? data.needed_by : null;
+    const neededBy =
+      neededByRaw && !Number.isNaN(Date.parse(neededByRaw))
+        ? new Date(neededByRaw).toISOString()
+        : null;
+
+    // Secret token so the requester can close their own request later
+    const closeToken = randomUUID();
+
     const result = await sql`
       INSERT INTO blood_requests (
         patient_name,
@@ -249,6 +276,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         urgency,
         additional_note,
         image_url,
+        needed_by,
+        close_token,
         status
       ) VALUES (
         ${patientName},
@@ -260,6 +289,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         ${urgency},
         ${additionalNote},
         ${imageUrl},
+        ${neededBy},
+        ${closeToken},
         'pending'
       )
       RETURNING id
@@ -268,7 +299,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const insertedId = result[0]?.id as number;
 
     return NextResponse.json(
-      { success: true, data: { id: insertedId } },
+      { success: true, data: { id: insertedId, close_url: `/request-close?token=${closeToken}` } },
       { status: 201 }
     );
   } catch (error) {

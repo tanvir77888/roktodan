@@ -18,6 +18,7 @@ import {
 
 // ── Dynamic client imports ────────────────────────────────────────────────────
 const DonorSearch = nextDynamic(() => import("./DonorSearch"), { ssr: false });
+const LiveBoard = nextDynamic(() => import("./LiveBoard"), { ssr: false });
 const HeroNameSearch = nextDynamic(() => import("./HeroNameSearch"), { ssr: false });
 const DonorRegistrationForm = nextDynamic(() => import("./DonorRegistrationForm"), { ssr: false });
 const BloodRequestForm = nextDynamic(() => import("./BloodRequestForm"), { ssr: false });
@@ -174,6 +175,8 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        <LiveBoard />
 
         <section id="search" className="py-16 bg-white dark:bg-gray-900">
           <div className="max-w-6xl mx-auto px-4">

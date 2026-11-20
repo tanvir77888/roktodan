@@ -78,7 +78,7 @@ export async function runMigration(): Promise<void> {
       additional_note TEXT,
       image_url       TEXT,
       status          VARCHAR(20)  NOT NULL DEFAULT 'pending'
-                        CHECK (status IN ('pending','fulfilled','rejected')),
+                        CHECK (status IN ('pending','approved','fulfilled','rejected')),
       created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     )
   `;
@@ -170,6 +170,12 @@ export async function runMigration(): Promise<void> {
     ["urgency_critical", "জরুরি"],
     ["urgency_moderate", "মাঝারি"],
     ["urgency_normal", "সাধারণ"],
+    ["helpline_1_name", "Tanvir"],
+    ["helpline_1_phone", "01403520600"],
+    ["helpline_2_name", "Akash"],
+    ["helpline_2_phone", "01619720600"],
+    ["announcement_enabled", "false"],
+    ["announcement_text", ""],
     ["admin_username", "admin"],
     // Empty string signals first-run: auth.ts will hash 'admin123' on first login attempt
     // and update this value. See DEVIATION 001 in Section 13.
@@ -187,4 +193,10 @@ export async function runMigration(): Promise<void> {
   // ── Add image_url columns (safe to run multiple times) ─────────────────────
   await sql`ALTER TABLE donors ADD COLUMN IF NOT EXISTS image_url TEXT`;
   await sql`ALTER TABLE blood_requests ADD COLUMN IF NOT EXISTS image_url TEXT`;
+
+  // ── Live board / request-close upgrades (2026-11-21) ─────────────────────
+  await sql`ALTER TABLE blood_requests ADD COLUMN IF NOT EXISTS close_token TEXT`;
+  await sql`ALTER TABLE blood_requests ADD COLUMN IF NOT EXISTS needed_by TIMESTAMPTZ`;
+  await sql`ALTER TABLE blood_requests DROP CONSTRAINT IF EXISTS blood_requests_status_check`;
+  await sql`ALTER TABLE blood_requests ADD CONSTRAINT blood_requests_status_check CHECK (status IN ('pending','approved','fulfilled','rejected'))`;
 }

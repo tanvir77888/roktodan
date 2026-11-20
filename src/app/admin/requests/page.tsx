@@ -12,6 +12,7 @@ import {
   X,
   CheckCircle,
   XCircle,
+  Megaphone,
   Filter,
 } from 'lucide-react';
 
@@ -28,7 +29,7 @@ interface BloodRequest {
   urgency: 'critical' | 'moderate' | 'normal';
   additional_note: string | null;
   image_url: string | null;
-  status: 'pending' | 'fulfilled' | 'rejected';
+  status: 'pending' | 'approved' | 'fulfilled' | 'rejected';
   created_at: string;
 }
 
@@ -69,11 +70,13 @@ function UrgencyBadge({ urgency }: { urgency: BloodRequest['urgency'] }) {
 function StatusBadge({ status }: { status: BloodRequest['status'] }) {
   const classes: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800',
+    approved: 'bg-green-100 text-green-800',
     fulfilled: 'bg-blue-100 text-blue-800',
     rejected: 'bg-red-100 text-red-800',
   };
   const labels: Record<string, string> = {
     pending: 'Pending',
+    approved: 'Live on board',
     fulfilled: 'Fulfilled',
     rejected: 'Rejected',
   };
@@ -231,7 +234,7 @@ export default function AdminRequestsPage() {
     setPage(1);
   };
 
-  const handleAction = async (id: number, action: 'fulfill' | 'reject' | 'delete') => {
+  const handleAction = async (id: number, action: 'fulfill' | 'reject' | 'delete' | 'approve') => {
     if (action === 'delete') {
       if (!window.confirm('এই অনুরোধটি মুছে ফেলতে চান?')) return;
     }
@@ -242,7 +245,7 @@ export default function AdminRequestsPage() {
         if (!res.ok) throw new Error();
         showToast('অনুরোধটি মুছে ফেলা হয়েছে।');
       } else {
-        const status = action === 'fulfill' ? 'fulfilled' : 'rejected';
+        const status = action === 'fulfill' ? 'fulfilled' : action === 'approve' ? 'approved' : 'rejected';
         const res = await fetch(`/api/requests/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -250,7 +253,7 @@ export default function AdminRequestsPage() {
           credentials: 'include',
         });
         if (!res.ok) throw new Error();
-        showToast(action === 'fulfill' ? 'অনুরোধটি পূর্ণ হিসেবে চিহ্নিত হয়েছে।' : 'অনুরোধটি প্রত্যাখ্যান করা হয়েছে।');
+        showToast(action === 'fulfill' ? 'অনুরোধটি পূর্ণ হিসেবে চিহ্নিত হয়েছে।' : action === 'approve' ? 'অনুরোধটি লাইভ বোর্ডে তোলা হয়েছে।' : 'অনুরোধটি প্রত্যাখ্যান করা হয়েছে।');
       }
       await fetchRequests(filters, page);
     } catch {
@@ -277,7 +280,7 @@ export default function AdminRequestsPage() {
       const data: ApiResponse = json.data ?? json;
 
       const urgencyLabel: Record<string, string> = { critical: 'জরুরি', moderate: 'মাঝারি', normal: 'সাধারণ' };
-      const statusLabel: Record<string, string> = { pending: 'অপেক্ষমাণ', fulfilled: 'পূর্ণ', rejected: 'প্রত্যাখ্যাত' };
+      const statusLabel: Record<string, string> = { pending: 'অপেক্ষমাণ', approved: 'বোর্ডে লাইভ', fulfilled: 'পূর্ণ', rejected: 'প্রত্যাখ্যাত' };
 
       const headers = ['Patient', 'Blood Group', 'Units', 'Hospital', 'District', 'Urgency', 'Contact', 'Status', 'Note', 'Submitted'];
       const rows = data.requests.map(r => [
@@ -377,6 +380,7 @@ export default function AdminRequestsPage() {
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
+            <option value="approved">Live on board</option>
             <option value="fulfilled">Fulfilled</option>
             <option value="rejected">Rejected</option>
           </select>
@@ -421,6 +425,13 @@ export default function AdminRequestsPage() {
                 <div className="flex items-center gap-2">
                   {req.status === 'pending' && (
                     <>
+                      <button
+                        onClick={() => handleAction(req.id, 'approve')}
+                        disabled={actionLoading === req.id}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-600 text-xs font-medium rounded-lg hover:bg-green-100 transition disabled:opacity-40"
+                      >
+                        <Megaphone size={12} /> বোর্ডে তুলুন
+                      </button>
                       <button
                         onClick={() => handleAction(req.id, 'fulfill')}
                         disabled={actionLoading === req.id}
@@ -525,6 +536,14 @@ export default function AdminRequestsPage() {
                       <div className="flex items-center gap-1">
                         {req.status === 'pending' && (
                           <>
+                            <button
+                              onClick={() => handleAction(req.id, 'approve')}
+                              disabled={actionLoading === req.id}
+                              title="লাইভ বোর্ডে তুলুন"
+                              className="p-1.5 rounded-md bg-green-50 text-green-600 hover:bg-green-100 transition-colors disabled:opacity-40"
+                            >
+                              <Megaphone size={15} />
+                            </button>
                             <button
                               onClick={() => handleAction(req.id, 'fulfill')}
                               disabled={actionLoading === req.id}
