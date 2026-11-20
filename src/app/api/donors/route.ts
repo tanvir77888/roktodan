@@ -36,10 +36,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const sort = searchParams.get("sort") ?? "";
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
     const defaultLimit = isAdmin ? 20 : 12;
-    const limit = Math.min(
+    const rawLimit = Math.min(
       9999,
       Math.max(1, parseInt(searchParams.get("limit") ?? String(defaultLimit), 10))
     );
+    // Scrape protection: public callers can page through at most 100 at a time
+    const limit = isAdmin ? rawLimit : Math.min(rawLimit, 100);
     const offset = (page - 1) * limit;
 
     // Status: public always gets approved; admin can filter freely
@@ -139,6 +141,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     `;
 
     const donors = await db(dataText, dataParams as any[]);
+
+    // Search analytics (public searches only, never breaks the search itself)
+    if (!isAdmin && (bloodGroup || district || search)) {
+      try {
+        await sql`
+          INSERT INTO search_logs (blood_group, district, term)
+          VALUES (${bloodGroup || null}, ${district || null}, ${search || null})
+        `;
+      } catch {
+        /* table may not exist yet — ignore */
+      }
+    }
 
     const pages = Math.ceil(total / limit);
 
@@ -265,6 +279,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
       }
       normalizedGender = gender;
+    }
+
+    // ── Duplicate phone check ──────────────────────────────────────────────
+    const existing = await sql`
+      SELECT id, full_name FROM donors
+      WHERE phone = ${digitsOnly} AND status <> 'rejected'
+      LIMIT 1
+    `;
+    if (existing.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          duplicate: true,
+          error: `এই ফোন নম্বর দিয়ে ইতিমধ্যে একজন ডোনার নিবন্ধিত আছেন (${(existing[0] as { full_name: string }).full_name})। একই নম্বর দুইবার নিবন্ধন করা যাবে না।`,
+        },
+        { status: 409 }
+      );
     }
 
     // ── Auto-approve check ─────────────────────────────────────────────────

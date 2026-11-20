@@ -56,7 +56,35 @@ export async function PATCH(
       );
     }
 
-    const { status } = body as Record<string, unknown>;
+    const { status, last_donation_date } = body as Record<string, unknown>;
+
+    // Last-donation-date update (used by the admin "last donated" editor)
+    if (last_donation_date !== undefined && status === undefined) {
+      let normalizedDate: string | null = null;
+      if (last_donation_date !== null && last_donation_date !== "") {
+        if (typeof last_donation_date !== "string" || isNaN(new Date(last_donation_date).getTime())) {
+          return NextResponse.json(
+            { success: false, error: "Invalid last_donation_date" },
+            { status: 400 }
+          );
+        }
+        normalizedDate = last_donation_date;
+      }
+      const dateRows = await sql`
+        UPDATE donors
+        SET last_donation_date = ${normalizedDate}
+        WHERE id = ${id}
+        RETURNING id, full_name, blood_group, district, upazila, phone,
+                  last_donation_date, gender, status, image_url, created_at
+      `;
+      if (dateRows.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "Donor not found" },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({ success: true, data: dateRows[0] }, { status: 200 });
+    }
 
     if (status !== "approved" && status !== "rejected") {
       return NextResponse.json(

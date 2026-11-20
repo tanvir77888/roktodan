@@ -9,6 +9,8 @@ import {
   Trash2,
   Eye,
   Download,
+  Upload,
+  CopyCheck,
   ChevronLeft,
   ChevronRight,
   Filter,
@@ -106,6 +108,11 @@ export default function AdminDonorsPage() {
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
 
   const [exportLoading, setExportLoading] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importSummary, setImportSummary] = useState("");
+  const [dupGroups, setDupGroups] = useState<Array<{ phone: string; donors: Donor[] }> | null>(null);
+  const [dupLoading, setDupLoading] = useState(false);
+  const [lastDonationDraft, setLastDonationDraft] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -241,6 +248,145 @@ export default function AdminDonorsPage() {
     }
   }
 
+  function parseCSV(text: string): Record<string, string>[] {
+    const rows: string[][] = [];
+    let cur: string[] = [];
+    let val = "";
+    let inQuotes = false;
+    const src = text.replace(/^\uFEFF/, "");
+    for (let i = 0; i < src.length; i++) {
+      const ch = src[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (src[i + 1] === '"') { val += '"'; i++; } else inQuotes = false;
+        } else val += ch;
+      } else if (ch === '"') inQuotes = true;
+      else if (ch === ",") { cur.push(val); val = ""; }
+      else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && src[i + 1] === "\n") i++;
+        cur.push(val); val = "";
+        if (cur.some((c) => c.trim() !== "")) rows.push(cur);
+        cur = [];
+      } else val += ch;
+    }
+    cur.push(val);
+    if (cur.some((c) => c.trim() !== "")) rows.push(cur);
+    if (rows.length < 2) return [];
+    const headers = rows[0].map((h) => h.trim().toLowerCase());
+    return rows.slice(1).map((r) => {
+      const obj: Record<string, string> = {};
+      headers.forEach((h, idx) => { obj[h] = (r[idx] ?? "").trim(); });
+      return obj;
+    });
+  }
+
+  async function handleImportCSV(file: File) {
+    setImportLoading(true);
+    setImportSummary("");
+    try {
+      const text = await file.text();
+      const records = parseCSV(text);
+      if (records.length === 0) {
+        showToast("CSV-তে কোনো ডেটা পাওয়া যায়নি (হেডার: full_name,blood_group,district,upazila,phone)", "error");
+        return;
+      }
+      let added = 0, duplicates = 0, failed = 0;
+      for (const rec of records) {
+        const payload = {
+          full_name: rec.full_name || rec.name || "",
+          blood_group: (rec.blood_group || "").toUpperCase(),
+          district: rec.district || "",
+          upazila: rec.upazila || "",
+          phone: rec.phone || "",
+          last_donation_date: rec.last_donation_date || null,
+          gender: rec.gender || null,
+        };
+        try {
+          const res = await fetch("/api/donors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            credentials: "include",
+          });
+          if (res.status === 201) added++;
+          else if (res.status === 409) duplicates++;
+          else failed++;
+        } catch {
+          failed++;
+        }
+      }
+      const summary = `ইম্পোর্ট শেষ: ${added} জন যোগ হয়েছে, ${duplicates} জন ডুপ্লিকেট (বাদ), ${failed} জন ব্যর্থ`;
+      setImportSummary(summary);
+      showToast(summary, failed > 0 ? "error" : "success");
+      await fetchDonors();
+    } catch {
+      showToast("CSV পড়া যায়নি", "error");
+    } finally {
+      setImportLoading(false);
+    }
+  }
+
+  async function handleFindDuplicates() {
+    setDupLoading(true);
+    try {
+      const res = await fetch("/api/donors?limit=9999", { credentials: "include" });
+      const json = await res.json();
+      const all: Donor[] = json.data?.donors ?? [];
+      const byPhone = new Map<string, Donor[]>();
+      for (const d of all) {
+        const key = d.phone.replace(/\D/g, "");
+        if (!byPhone.has(key)) byPhone.set(key, []);
+        byPhone.get(key)!.push(d);
+      }
+      const groups = [...byPhone.entries()]
+        .filter(([, list]) => list.length > 1)
+        .map(([phone, donors]) => ({ phone, donors }));
+      setDupGroups(groups);
+      if (groups.length === 0) showToast("কোনো ডুপ্লিকেট নম্বর পাওয়া যায়নি 🎉");
+    } catch {
+      showToast("ডুপ্লিকেট খুঁজতে সমস্যা হয়েছে", "error");
+    } finally {
+      setDupLoading(false);
+    }
+  }
+
+  async function handleDeleteDuplicate(id: number) {
+    if (!window.confirm("এই ডুপ্লিকেট এন্ট্রিটি মুছে ফেলতে চান?")) return;
+    try {
+      const res = await fetch(`/api/donors/${id}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error();
+      showToast("ডুপ্লিকেট এন্ট্রি মোছা হয়েছে");
+      setDupGroups((prev) =>
+        prev
+          ? prev
+              .map((g) => ({ ...g, donors: g.donors.filter((d) => d.id !== id) }))
+              .filter((g) => g.donors.length > 1)
+          : prev
+      );
+      await fetchDonors();
+    } catch {
+      showToast("মোছা যায়নি", "error");
+    }
+  }
+
+  async function handleLastDonationUpdate() {
+    if (!selectedDonor) return;
+    try {
+      const res = await fetch(`/api/donors/${selectedDonor.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ last_donation_date: lastDonationDraft || null }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error();
+      showToast("শেষ রক্তদানের তারিখ আপডেট হয়েছে");
+      setSelectedDonor((prev) => (prev ? { ...prev, last_donation_date: lastDonationDraft || null } : prev));
+      await fetchDonors();
+    } catch {
+      showToast("আপডেট করা যায়নি", "error");
+    }
+  }
+
   async function handleExportCSV() {
     setExportLoading(true);
     try {
@@ -308,15 +454,74 @@ export default function AdminDonorsPage() {
             {totalCount} donors found
           </p>
         </div>
-        <button
-          onClick={handleExportCSV}
-          disabled={exportLoading}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 shadow-sm"
-        >
-          <Download size={16} />
-          {exportLoading ? "Exporting..." : "Export CSV"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition shadow-sm cursor-pointer">
+            <Upload size={16} />
+            {importLoading ? "Importing..." : "Import CSV"}
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              disabled={importLoading}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleImportCSV(f);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <button
+            onClick={handleFindDuplicates}
+            disabled={dupLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 shadow-sm"
+          >
+            <CopyCheck size={16} />
+            {dupLoading ? "খোঁজা হচ্ছে..." : "ডুপ্লিকেট খুঁজুন"}
+          </button>
+          <button
+            onClick={handleExportCSV}
+            disabled={exportLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 shadow-sm"
+          >
+            <Download size={16} />
+            {exportLoading ? "Exporting..." : "Export CSV"}
+          </button>
+        </div>
       </div>
+
+      {importSummary && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-xl px-4 py-3">
+          {importSummary} — CSV হেডার হতে হবে: full_name, blood_group, district, upazila, phone, last_donation_date, gender
+        </div>
+      )}
+
+      {dupGroups !== null && (
+        <div className="mb-4 bg-white border border-amber-300 rounded-xl shadow-sm p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-bold text-gray-900">ডুপ্লিকেট নম্বর ({dupGroups.length}টি গ্রুপ)</h2>
+            <button onClick={() => setDupGroups(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+          </div>
+          {dupGroups.length === 0 ? (
+            <p className="text-sm text-green-600">কোনো ডুপ্লিকেট নেই 🎉</p>
+          ) : (
+            <div className="space-y-3">
+              {dupGroups.map((g) => (
+                <div key={g.phone} className="border border-gray-100 rounded-lg p-3">
+                  <div className="text-sm font-semibold text-gray-800 mb-1">📱 {g.phone} — {g.donors.length}টি এন্ট্রি</div>
+                  {g.donors.map((d) => (
+                    <div key={d.id} className="flex items-center justify-between text-sm py-1">
+                      <span>{d.full_name} · {d.blood_group} · {d.district} · <span className="text-gray-400">#{d.id} ({d.status})</span></span>
+                      <button onClick={() => handleDeleteDuplicate(d.id)} className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100">
+                        <Trash2 size={12} /> মুছুন
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-4">
@@ -702,6 +907,24 @@ export default function AdminDonorsPage() {
                   <span className="text-sm font-medium text-gray-800 text-right">{value}</span>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-4 bg-gray-50 rounded-xl p-3">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">শেষ রক্তদানের তারিখ আপডেট করুন</label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={lastDonationDraft || (selectedDonor.last_donation_date ? selectedDonor.last_donation_date.slice(0, 10) : "")}
+                  onChange={(e) => setLastDonationDraft(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+                />
+                <button
+                  onClick={handleLastDonationUpdate}
+                  className="px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:opacity-90"
+                >
+                  আপডেট
+                </button>
+              </div>
             </div>
 
             <div className="mt-5 flex gap-2">

@@ -46,6 +46,7 @@ export default async function AdminDashboardPage() {
     totalRequestsResult,
     fulfilledRequestsResult,
     rejectedRequestsResult,
+    pendingRequestsResult,
     activityResult,
     groupCountsResult,
   ] = await Promise.all([
@@ -54,6 +55,7 @@ export default async function AdminDashboardPage() {
     sql`SELECT COUNT(*)::text AS count FROM blood_requests` as unknown as Promise<StatRow[]>,
     sql`SELECT COUNT(*)::text AS count FROM blood_requests WHERE status = 'fulfilled'` as unknown as Promise<StatRow[]>,
     sql`SELECT COUNT(*)::text AS count FROM blood_requests WHERE status = 'rejected'` as unknown as Promise<StatRow[]>,
+    sql`SELECT COUNT(*)::text AS count FROM blood_requests WHERE status = 'pending'` as unknown as Promise<StatRow[]>,
     sql`
       SELECT type, name, blood_group, district, status, created_at
       FROM (
@@ -93,7 +95,26 @@ export default async function AdminDashboardPage() {
     totalRequests: parseInt(totalRequestsResult[0]?.count ?? "0", 10),
     fulfilledRequests: parseInt(fulfilledRequestsResult[0]?.count ?? "0", 10),
     rejectedRequests: parseInt(rejectedRequestsResult[0]?.count ?? "0", 10),
+    pendingRequests: parseInt(pendingRequestsResult[0]?.count ?? "0", 10),
   };
+
+  // Search analytics (table may not exist before migration — never break dashboard)
+  let topSearchGroups: Array<{ blood_group: string; count: string }> = [];
+  let topSearchDistricts: Array<{ district: string; count: string }> = [];
+  try {
+    topSearchGroups = (await sql`
+      SELECT blood_group, COUNT(*)::text AS count FROM search_logs
+      WHERE blood_group IS NOT NULL AND created_at > NOW() - INTERVAL '30 days'
+      GROUP BY blood_group ORDER BY COUNT(*) DESC LIMIT 5
+    `) as unknown as Array<{ blood_group: string; count: string }>;
+    topSearchDistricts = (await sql`
+      SELECT district, COUNT(*)::text AS count FROM search_logs
+      WHERE district IS NOT NULL AND created_at > NOW() - INTERVAL '30 days'
+      GROUP BY district ORDER BY COUNT(*) DESC LIMIT 5
+    `) as unknown as Array<{ district: string; count: string }>;
+  } catch {
+    /* search_logs not created yet */
+  }
 
   const statCards = [
     {
@@ -147,6 +168,22 @@ export default async function AdminDashboardPage() {
         <p className="mt-1 text-sm text-gray-500">Overview of Roktho Bondhon platform activity.</p>
       </div>
 
+      {(stats.pendingDonors > 0 || stats.pendingRequests > 0) && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl px-5 py-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <span className="font-bold text-amber-800">🔔 নতুন কাজ অপেক্ষা করছে:</span>
+          {stats.pendingDonors > 0 && (
+            <a href="/admin/donors" className="text-sm font-medium text-amber-700 underline">
+              {stats.pendingDonors} জন ডোনার অনুমোদনের অপেক্ষায়
+            </a>
+          )}
+          {stats.pendingRequests > 0 && (
+            <a href="/admin/requests" className="text-sm font-medium text-amber-700 underline">
+              {stats.pendingRequests}টি রক্তের অনুরোধ যাচাইয়ের অপেক্ষায় (লাইভ বোর্ডে তুলতে হবে)
+            </a>
+          )}
+        </div>
+      )}
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {statCards.map((card) => {
@@ -193,6 +230,35 @@ export default async function AdminDashboardPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Search analytics */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+          <h2 className="text-base font-semibold text-gray-900 mb-3">মানুষ সবচেয়ে বেশি যা খুঁজছে (শেষ ৩০ দিন)</h2>
+          {topSearchGroups.length === 0 && topSearchDistricts.length === 0 ? (
+            <p className="text-sm text-gray-400">এখনো যথেষ্ট সার্চ ডেটা জমেনি।</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs font-semibold text-gray-500 mb-2">রক্তের গ্রুপ</div>
+                {topSearchGroups.map((r) => (
+                  <div key={r.blood_group} className="flex justify-between text-sm py-1 border-b border-gray-50">
+                    <span className="font-bold text-red-600">{r.blood_group}</span>
+                    <span className="text-gray-600">{r.count} বার</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-gray-500 mb-2">জেলা</div>
+                {topSearchDistricts.map((r) => (
+                  <div key={r.district} className="flex justify-between text-sm py-1 border-b border-gray-50">
+                    <span className="font-medium text-gray-800">{r.district}</span>
+                    <span className="text-gray-600">{r.count} বার</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Recent Activity */}
