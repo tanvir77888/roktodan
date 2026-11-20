@@ -32,6 +32,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const district = searchParams.get("district") ?? "";
     const upazila = searchParams.get("upazila") ?? "";
     const search = searchParams.get("search") ?? "";
+    const availableOnly = searchParams.get("availableOnly") === "1";
+    const sort = searchParams.get("sort") ?? "";
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
     const defaultLimit = isAdmin ? 20 : 12;
     const limit = Math.min(
@@ -91,7 +93,33 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       paramIdx++;
     }
 
+    if (availableOnly) {
+      const daysRaw = parseInt((await getSetting("availability_days")) ?? "90", 10);
+      const days = Number.isNaN(daysRaw) ? 90 : daysRaw;
+      conditions.push(`(last_donation_date IS NULL OR last_donation_date <= CURRENT_DATE - ($${paramIdx}::int))`);
+      params.push(days);
+      paramIdx++;
+    }
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    // Near-first ordering: same district/upazila first when requested
+    let orderClause = "ORDER BY created_at DESC";
+    const orderParams: unknown[] = [];
+    if (sort === "near" && (district || upazila)) {
+      const parts: string[] = [];
+      if (district) {
+        parts.push(`(CASE WHEN district = $${paramIdx + orderParams.length} THEN 0 ELSE 1 END)`);
+        orderParams.push(district);
+      }
+      if (upazila) {
+        parts.push(`(CASE WHEN upazila = $${paramIdx + orderParams.length} THEN 0 ELSE 1 END)`);
+        orderParams.push(upazila);
+      }
+      parts.push("created_at DESC");
+      orderClause = `ORDER BY ${parts.join(", ")}`;
+    }
+    const limitIdx = paramIdx + orderParams.length;
 
     // Count query
     const countText = `SELECT COUNT(*) as total FROM donors ${whereClause}`;
@@ -99,15 +127,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const total = parseInt(countRows[0]?.total ?? "0", 10);
 
     // Data query
-    const dataParams = [...params, limit, offset];
+    const dataParams = [...params, ...orderParams, limit, offset];
     const dataText = `
       SELECT
         id, full_name, blood_group, district, upazila,
         phone, last_donation_date, gender, status, image_url, created_at
       FROM donors
       ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT $${paramIdx} OFFSET $${paramIdx + 1}
+      ${orderClause}
+      LIMIT $${limitIdx} OFFSET $${limitIdx + 1}
     `;
 
     const donors = await db(dataText, dataParams as any[]);

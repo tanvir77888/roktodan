@@ -54,6 +54,10 @@ export default function DonorSearch({
   const [donors, setDonors] = useState<Donor[]>([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const upazilas = districts.find((d) => d.name === district)?.upazilas ?? [];
   const availabilityDays = parseInt(settings.availability_days, 10) || 90;
@@ -64,29 +68,62 @@ export default function DonorSearch({
     return days >= availabilityDays;
   }
 
-  async function handleSearch() {
+  async function runSearch(pageNum: number, append: boolean, groupOverride?: string) {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ status: "approved", limit: "50" });
-      if (bloodGroup) params.set("bloodGroup", bloodGroup);
+      const group = groupOverride !== undefined ? groupOverride : bloodGroup;
+      const params = new URLSearchParams({ status: "approved", limit: "24", page: String(pageNum) });
+      if (group) params.set("bloodGroup", group);
       if (district) params.set("district", district);
       if (upazila) params.set("upazila", upazila);
+      if (availableOnly) params.set("availableOnly", "1");
+      if (district) params.set("sort", "near");
 
       const res = await fetch(`/api/donors?${params.toString()}`);
       const data = await res.json();
-      setDonors(data.data?.donors ?? []);
+      const list: Donor[] = data.data?.donors ?? [];
+      setDonors((prev) => (append ? [...prev, ...list] : list));
+      setPage(data.data?.page ?? pageNum);
+      setPages(data.data?.pages ?? 1);
+      setTotal(data.data?.total ?? list.length);
     } catch {
-      setDonors([]);
+      if (!append) setDonors([]);
     } finally {
       setLoading(false);
       setSearched(true);
     }
   }
 
+  async function handleSearch() {
+    await runSearch(1, false);
+  }
+
+  async function handleQuickGroup(g: string) {
+    setBloodGroup(g);
+    await runSearch(1, false, g);
+  }
+
   return (
     <div>
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm mb-8">
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-1">গ্রুপ ধরে খুঁজুন:</span>
+          {bloodGroups.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => handleQuickGroup(g)}
+              className={`px-3 py-1.5 rounded-full text-sm font-bold transition ${
+                bloodGroup === g
+                  ? "bg-red-600 text-white"
+                  : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100"
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -130,6 +167,18 @@ export default function DonorSearch({
             />
           </div>
         </div>
+
+        <label className="flex items-center gap-2.5 mb-4 cursor-pointer w-fit">
+          <input
+            type="checkbox"
+            checked={availableOnly}
+            onChange={(e) => setAvailableOnly(e.target.checked)}
+            className="w-4 h-4 accent-red-600"
+          />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            শুধু এখন রক্ত দিতে পারবেন এমন ডোনার দেখুন
+          </span>
+        </label>
 
         <button
           onClick={handleSearch}
@@ -233,6 +282,21 @@ export default function DonorSearch({
             })}
           </div>
         )
+      )}
+
+      {searched && donors.length > 0 && (
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">মোট {total} জন ডোনার পাওয়া গেছে</p>
+          {page < pages && (
+            <button
+              onClick={() => runSearch(page + 1, true)}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition disabled:opacity-60"
+            >
+              {loading ? "লোড হচ্ছে..." : "আরও দেখুন"}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

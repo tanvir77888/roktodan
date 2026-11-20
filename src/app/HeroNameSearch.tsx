@@ -24,14 +24,47 @@ const BLOOD_GROUP_COLORS: Record<string, string> = {
   "O-": "bg-green-100 text-green-700",
 };
 
+interface Suggestion {
+  id: number;
+  full_name: string;
+  blood_group: string;
+  district: string;
+}
+
 export default function HeroNameSearch() {
   const [query, setQuery] = useState("");
   const [donors, setDonors] = useState<Donor[]>([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showSug, setShowSug] = useState(false);
+
+  async function fetchSuggestions(q: string) {
+    try {
+      const res = await fetch(`/api/donors?search=${encodeURIComponent(q)}&limit=6`);
+      const data = await res.json();
+      setSuggestions(data.data?.donors ?? []);
+      setShowSug(true);
+    } catch {
+      setSuggestions([]);
+    }
+  }
+
+  function handleQueryChange(value: string) {
+    setQuery(value);
+    const q = value.trim();
+    if (q.length < 2) {
+      setSuggestions([]);
+      setShowSug(false);
+      return;
+    }
+    window.clearTimeout((handleQueryChange as unknown as { _t?: number })._t);
+    (handleQueryChange as unknown as { _t?: number })._t = window.setTimeout(() => fetchSuggestions(q), 250);
+  }
 
   async function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setShowSug(false);
     const q = query.trim();
     if (!q) return;
     setLoading(true);
@@ -49,8 +82,9 @@ export default function HeroNameSearch() {
   }
 
   return (
-    <div className="max-w-xl mx-auto mb-8">
+    <div className="max-w-xl mx-auto mb-8 relative">
       <form
+        data-hero-search
         onSubmit={handleSearch}
         className="flex items-center gap-2 bg-white dark:bg-gray-800 border-2 border-red-100 dark:border-red-900/30 rounded-2xl p-2 shadow-sm focus-within:border-red-300 transition-colors"
       >
@@ -58,7 +92,9 @@ export default function HeroNameSearch() {
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => handleQueryChange(e.target.value)}
+          onFocus={() => { if (suggestions.length > 0) setShowSug(true); }}
+          onBlur={() => window.setTimeout(() => setShowSug(false), 200)}
           placeholder="রক্তদাতার নাম দিয়ে খুঁজুন"
           aria-label="রক্তদাতার নাম দিয়ে খুঁজুন"
           className="flex-1 min-w-0 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 px-1 py-2 text-base focus:outline-none"
@@ -72,6 +108,31 @@ export default function HeroNameSearch() {
           {loading ? "খোঁজা হচ্ছে..." : "খুঁজুন"}
         </button>
       </form>
+
+      {showSug && suggestions.length > 0 && (
+        <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden z-20 text-left">
+          {suggestions.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => {
+                setQuery(s.full_name);
+                setShowSug(false);
+                window.setTimeout(() => {
+                  const form = document.querySelector<HTMLFormElement>("form[data-hero-search]");
+                  form?.requestSubmit();
+                }, 50);
+              }}
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-red-50 dark:hover:bg-gray-700 transition"
+            >
+              <span className="font-medium text-gray-900 dark:text-white">{s.full_name}</span>
+              <span className="text-xs text-gray-500">
+                {s.district} · <span className="font-bold text-red-600">{s.blood_group}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {searched && (
         donors.length === 0 ? (
