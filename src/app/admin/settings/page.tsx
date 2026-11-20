@@ -981,15 +981,17 @@ const err = await res.json().catch(() => ({}));
             <FormField label="Announcement Text (ঘোষণা)">
               <TextInput value={form.announcement_text} onChange={(v) => setField("announcement_text", v)} placeholder="যেমন: আগামী শুক্রবার হবিগঞ্জে রক্তদান ক্যাম্প" />
             </FormField>
-            <SaveSectionButton
-              onClick={() =>
-                saveKeys(
-                  ["helpline_1_name", "helpline_1_phone", "helpline_2_name", "helpline_2_phone", "announcement_enabled", "announcement_text"],
-                  "helpline"
-                )
-              }
-              loading={savingSection === "helpline"}
-            />
+            <div className="flex justify-end">
+              <SaveButton
+                onClick={() =>
+                  saveKeys(
+                    ["helpline_1_name", "helpline_1_phone", "helpline_2_name", "helpline_2_phone", "announcement_enabled", "announcement_text"],
+                    "helpline"
+                  )
+                }
+                loading={savingSection === "helpline"}
+              />
+            </div>
           </div>
         </SectionCard>
 
