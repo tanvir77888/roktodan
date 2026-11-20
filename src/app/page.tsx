@@ -18,6 +18,7 @@ import {
 
 // ── Dynamic client imports ────────────────────────────────────────────────────
 const DonorSearch = nextDynamic(() => import("./DonorSearch"), { ssr: false });
+const HeroNameSearch = nextDynamic(() => import("./HeroNameSearch"), { ssr: false });
 const DonorRegistrationForm = nextDynamic(() => import("./DonorRegistrationForm"), { ssr: false });
 const BloodRequestForm = nextDynamic(() => import("./BloodRequestForm"), { ssr: false });
 const DarkModeToggle = nextDynamic(() => import("./DarkModeToggle"), { ssr: false });
@@ -81,7 +82,7 @@ function Hero({ settings }: { settings: SettingsMap }) {
           {settings.site_tagline}
         </div>
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">{settings.hero_headline}</h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">{settings.hero_subheadline}</p>
+        <HeroNameSearch />
         
         {/* Contact Cards */}
         <div className="flex flex-col gap-3 mb-10 max-w-xs mx-auto">
