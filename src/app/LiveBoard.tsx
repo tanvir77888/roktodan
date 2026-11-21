@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Phone, MessageCircle, Droplet, Clock, Share2, AlertTriangle } from "lucide-react";
+import { BOARD_STRINGS, type Lang } from "@/lib/i18n";
 
 interface BoardRequest {
   id: number;
@@ -44,7 +45,8 @@ function shareText(r: BoardRequest): string {
   ].join("\n");
 }
 
-export default function LiveBoard() {
+export default function LiveBoard({ lang = "bn" }: { lang?: Lang }) {
+  const t = BOARD_STRINGS[lang];
   const [requests, setRequests] = useState<BoardRequest[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -85,10 +87,10 @@ export default function LiveBoard() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-60" />
             <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600" />
           </span>
-          জরুরি রক্তের অনুরোধ — লাইভ বোর্ড
+          {t.title}
         </h2>
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-8">
-          এই মুহূর্তে যাদের রক্ত দরকার — আপনার গ্রুপ মিললে একটা কলই যথেষ্ট
+          {t.subtitle}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {requests.map((r) => {
@@ -109,7 +111,7 @@ export default function LiveBoard() {
                 </div>
                 {isSos && (
                   <span className="inline-flex items-center gap-1 text-xs font-bold bg-red-100 text-red-700 px-2.5 py-1 rounded-full mb-2">
-                    <AlertTriangle className="w-3.5 h-3.5" /> SOS — অতি জরুরি
+                    <AlertTriangle className="w-3.5 h-3.5" /> {t.sos}
                   </span>
                 )}
                 <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -133,7 +135,7 @@ export default function LiveBoard() {
                     href={`tel:${r.contact_number}`}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:opacity-90"
                   >
-                    <Phone className="w-4 h-4" /> কল করুন
+                    <Phone className="w-4 h-4" /> {t.call}
                   </a>
                   <a
                     href={`https://wa.me/880${r.contact_number.replace(/\D/g, "").replace(/^880/, "").replace(/^0/, "")}`}
@@ -147,7 +149,7 @@ export default function LiveBoard() {
                     href={`https://wa.me/?text=${encodeURIComponent(shareText(r))}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="শেয়ার করুন"
+                    title={t.share}
                     className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <Share2 className="w-4 h-4" />

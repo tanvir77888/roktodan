@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { differenceInDays, parseISO } from "date-fns";
-import { Phone, MessageCircle, Search } from "lucide-react";
+import { Phone, MessageCircle, Search, Eye, Flag, BadgeCheck } from "lucide-react";
 import type { District } from "@/lib/geodata";
 import SearchableSelect from "./SearchableSelect";
 
@@ -58,6 +58,36 @@ export default function DonorSearch({
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set());
+  const [reportedIds, setReportedIds] = useState<Set<number>>(new Set());
+
+  function maskPhone(phone: string): string {
+    const d = phone.replace(/\D/g, "");
+    if (d.length < 7) return phone;
+    return `${d.slice(0, 3)}•••••${d.slice(-2)}`;
+  }
+
+  function isRegularDonor(lastDonationDate: string | null): boolean {
+    if (!lastDonationDate) return false;
+    return differenceInDays(new Date(), parseISO(lastDonationDate)) <= 365;
+  }
+
+  async function handleReport(donor: Donor) {
+    if (reportedIds.has(donor.id)) return;
+    if (!window.confirm(`"${donor.full_name}"-এর নম্বরটি ভুয়া বলে রিপোর্ট করতে চান? এডমিন যাচাই করবেন।`)) return;
+    try {
+      const res = await fetch("/api/donors/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ donor_id: donor.id }),
+      });
+      if (res.ok) {
+        setReportedIds((prev) => new Set(prev).add(donor.id));
+      }
+    } catch {
+      /* silent */
+    }
+  }
 
   const upazilas = districts.find((d) => d.name === district)?.upazilas ?? [];
   const availabilityDays = parseInt(settings.availability_days, 10) || 90;
@@ -241,7 +271,28 @@ export default function DonorSearch({
                     </span>
                   </div>
 
-                  <div className="mb-4">
+                  <div className="flex items-center justify-between mb-3 text-sm">
+                    <span className="text-gray-600 dark:text-gray-300 font-medium">
+                      📱 {revealedIds.has(donor.id) ? donor.phone : maskPhone(donor.phone)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRevealedIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(donor.id)) next.delete(donor.id);
+                          else next.add(donor.id);
+                          return next;
+                        })
+                      }
+                      className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:underline"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      {revealedIds.has(donor.id) ? "লুকান" : "নম্বর দেখুন"}
+                    </button>
+                  </div>
+
+                  <div className="mb-4 flex flex-wrap gap-1.5">
                     {available ? (
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -250,6 +301,12 @@ export default function DonorSearch({
                     ) : (
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full">
                         সম্প্রতি দান করেছেন
+                      </span>
+                    )}
+                    {isRegularDonor(donor.last_donation_date) && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">
+                        <BadgeCheck className="w-3.5 h-3.5" />
+                        নিয়মিত দাতা
                       </span>
                     )}
                   </div>
@@ -277,6 +334,15 @@ export default function DonorSearch({
                       </a>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => handleReport(donor)}
+                    disabled={reportedIds.has(donor.id)}
+                    className="mt-2.5 inline-flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 disabled:text-green-600 disabled:no-underline hover:underline"
+                  >
+                    <Flag className="w-3 h-3" />
+                    {reportedIds.has(donor.id) ? "রিপোর্ট করা হয়েছে ✓ এডমিন যাচাই করবেন" : "ভুয়া নম্বর? রিপোর্ট করুন"}
+                  </button>
                 </div>
               );
             })}

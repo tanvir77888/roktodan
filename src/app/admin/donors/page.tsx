@@ -113,6 +113,25 @@ export default function AdminDonorsPage() {
   const [dupGroups, setDupGroups] = useState<Array<{ phone: string; donors: Donor[] }> | null>(null);
   const [dupLoading, setDupLoading] = useState(false);
   const [lastDonationDraft, setLastDonationDraft] = useState("");
+  const [reportRows, setReportRows] = useState<Array<{
+    id: number; full_name: string; blood_group: string; district: string;
+    phone: string; status: string; report_count: number; last_reported_at: string;
+  }> | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  async function handleLoadReports() {
+    setReportLoading(true);
+    try {
+      const res = await fetch("/api/admin/reports", { credentials: "include" });
+      const json = await res.json();
+      setReportRows(json.data ?? []);
+      if ((json.data ?? []).length === 0) showToast("কোনো রিপোর্ট নেই 🎉", "success");
+    } catch {
+      showToast("রিপোর্ট লোড করা যায়নি", "error");
+    } finally {
+      setReportLoading(false);
+    }
+  }
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -342,7 +361,7 @@ export default function AdminDonorsPage() {
         .filter(([, list]) => list.length > 1)
         .map(([phone, donors]) => ({ phone, donors }));
       setDupGroups(groups);
-      if (groups.length === 0) showToast("কোনো ডুপ্লিকেট নম্বর পাওয়া যায়নি 🎉");
+      if (groups.length === 0) showToast("কোনো ডুপ্লিকেট নম্বর পাওয়া যায়নি 🎉", "success");
     } catch {
       showToast("ডুপ্লিকেট খুঁজতে সমস্যা হয়েছে", "error");
     } finally {
@@ -355,7 +374,7 @@ export default function AdminDonorsPage() {
     try {
       const res = await fetch(`/api/donors/${id}`, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error();
-      showToast("ডুপ্লিকেট এন্ট্রি মোছা হয়েছে");
+      showToast("ডুপ্লিকেট এন্ট্রি মোছা হয়েছে", "success");
       setDupGroups((prev) =>
         prev
           ? prev
@@ -379,7 +398,7 @@ export default function AdminDonorsPage() {
         credentials: "include",
       });
       if (!res.ok) throw new Error();
-      showToast("শেষ রক্তদানের তারিখ আপডেট হয়েছে");
+      showToast("শেষ রক্তদানের তারিখ আপডেট হয়েছে", "success");
       setSelectedDonor((prev) => (prev ? { ...prev, last_donation_date: lastDonationDraft || null } : prev));
       await fetchDonors();
     } catch {
@@ -479,6 +498,13 @@ export default function AdminDonorsPage() {
             {dupLoading ? "খোঁজা হচ্ছে..." : "ডুপ্লিকেট খুঁজুন"}
           </button>
           <button
+            onClick={handleLoadReports}
+            disabled={reportLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-red-300 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-50 shadow-sm"
+          >
+            🚩 {reportLoading ? "লোড হচ্ছে..." : "ভুয়া-নম্বর রিপোর্ট"}
+          </button>
+          <button
             onClick={handleExportCSV}
             disabled={exportLoading}
             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 shadow-sm"
@@ -492,6 +518,33 @@ export default function AdminDonorsPage() {
       {importSummary && (
         <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-xl px-4 py-3">
           {importSummary} — CSV হেডার হতে হবে: full_name, blood_group, district, upazila, phone, last_donation_date, gender
+        </div>
+      )}
+
+      {reportRows !== null && (
+        <div className="mb-4 bg-white border border-red-200 rounded-xl shadow-sm p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-bold text-gray-900">🚩 রিপোর্ট পাওয়া ডোনার ({reportRows.length} জন)</h2>
+            <button onClick={() => setReportRows(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+          </div>
+          {reportRows.length === 0 ? (
+            <p className="text-sm text-green-600">কোনো রিপোর্ট নেই 🎉</p>
+          ) : (
+            <div className="space-y-2">
+              {reportRows.map((r) => (
+                <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border border-gray-100 rounded-lg px-3 py-2 text-sm">
+                  <span>
+                    <strong>{r.full_name}</strong> · {r.blood_group} · {r.district} · 📱 {r.phone}
+                    <span className="text-gray-400"> · #{r.id} ({r.status})</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-xs font-bold">
+                    {r.report_count}টি রিপোর্ট
+                  </span>
+                </div>
+              ))}
+              <p className="text-xs text-gray-400">যাচাই করে ভুয়া হলে উপরের তালিকা থেকে ডোনারটিকে প্রত্যাখ্যান/মুছে দিন।</p>
+            </div>
+          )}
         </div>
       )}
 

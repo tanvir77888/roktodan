@@ -1,7 +1,7 @@
 // src/app/api/donors/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { verifyToken } from "@/lib/auth";
+import { verifyToken, getSessionUsername, logAudit } from "@/lib/auth";
 import { cookies } from "next/headers";
 
 // ── Auth helper ────────────────────────────────────────────────────────────
@@ -83,6 +83,8 @@ export async function PATCH(
           { status: 404 }
         );
       }
+      const actor = await getSessionUsername();
+      if (actor) await logAudit(actor, "donor_status", `ডোনার #${id} শেষ দানের তারিখ: ${normalizedDate ?? "—"}`);
       return NextResponse.json({ success: true, data: dateRows[0] }, { status: 200 });
     }
 
@@ -121,6 +123,8 @@ export async function PATCH(
       );
     }
 
+    const actor = await getSessionUsername();
+    if (actor) await logAudit(actor, "donor_status", `ডোনার #${id} স্ট্যাটাস: ${status}`);
     return NextResponse.json({ success: true, data: rows[0] }, { status: 200 });
   } catch (error) {
     console.error("[PATCH /api/donors/[id]]", error);
@@ -168,6 +172,8 @@ export async function DELETE(
       );
     }
 
+    const actor = await getSessionUsername();
+    if (actor) await logAudit(actor, "donor_delete", `ডোনার #${id} মোছা হয়েছে`);
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("[DELETE /api/donors/[id]]", error);

@@ -10,6 +10,8 @@ function LoginForm() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [totp, setTotp] = useState('');
+  const [needsTotp, setNeedsTotp] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +24,7 @@ function LoginForm() {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, totp: needsTotp ? totp : undefined }),
       });
 
       const data = await res.json();
@@ -30,6 +32,9 @@ function LoginForm() {
       if (res.ok && data.success) {
         const from = searchParams.get('from');
         router.push(from && from.startsWith('/admin') ? from : '/admin/dashboard');
+      } else if (data.needs_totp) {
+        setNeedsTotp(true);
+        setError(data.error === 'Invalid authenticator code' ? 'কোডটি মিলেনি, আবার চেষ্টা করুন।' : '');
       } else {
         setError(data.error ?? 'Invalid credentials. Please try again.');
         setPassword('');
@@ -111,9 +116,33 @@ function LoginForm() {
               />
             </div>
 
+            {needsTotp && (
+              <div>
+                <label
+                  htmlFor="totp"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Authenticator Code (৬ সংখ্যা)
+                </label>
+                <input
+                  id="totp"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  disabled={loading}
+                  value={totp}
+                  onChange={(e) => setTotp(e.target.value.replace(/\D/g, ''))}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50 tracking-[0.3em] text-center text-lg"
+                  placeholder="------"
+                />
+                <p className="mt-1 text-xs text-gray-400">আপনার Authenticator অ্যাপে দেখানো কোডটি দিন।</p>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading || !username.trim() || !password}
+              disabled={loading || !username.trim() || !password || (needsTotp && totp.length !== 6)}
               className="w-full mt-2 flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (

@@ -6,6 +6,7 @@ import {
   getAdminCredentials,
   verifyPassword,
   hashPassword,
+  logAudit,
 } from "@/lib/auth";
 import { updateSettings } from "@/lib/settings";
 
@@ -49,6 +50,8 @@ const VALID_SETTINGS_KEYS = new Set<string>([
   "helpline_2_phone",
   "announcement_enabled",
   "announcement_text",
+  "stories_json",
+  "directory_json",
   "email_address",
   "show_live_counters",
   "show_why_donate",
@@ -199,6 +202,11 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
   try {
     if (Object.keys(filteredUpdates).length > 0) {
       await updateSettings(filteredUpdates);
+      await logAudit(
+        session.username,
+        "settings_update",
+        `সেটিংস বদল: ${Object.keys(filteredUpdates).join(", ")}`
+      );
     }
     return NextResponse.json({ success: true });
   } catch (err) {

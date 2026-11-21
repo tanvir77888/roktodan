@@ -81,10 +81,21 @@ export default function DonorRegistrationForm({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm space-y-4">
       {success && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center min-h-[48px] flex items-center justify-center">
-          <p className="text-green-800 dark:text-green-300 font-medium text-sm">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
+          <p className="text-green-800 dark:text-green-300 font-medium text-sm mb-3">
             {settings.donor_success_msg || "আপনার নিবন্ধন সফল হয়েছে!"}
           </p>
+          <p className="text-xs text-green-700 dark:text-green-400 mb-2">
+            আপনার বন্ধুদেরও রক্তদানে আমন্ত্রণ জানান — যত বেশি ডোনার, তত বেশি জীবন বাঁচবে।
+          </p>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent("🩸 আমি Roktho Bondhon-এ রক্তদাতা হিসেবে নিবন্ধন করেছি। তুমিও যোগ দাও — জরুরি মুহূর্তে তোমার রক্তে বাঁচতে পারে একটি জীবন: https://roktodan2.vercel.app")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-green-600 text-white text-sm font-semibold hover:opacity-90"
+          >
+            📲 বন্ধুদের WhatsApp-এ আমন্ত্রণ পাঠান
+          </a>
         </div>
       )}
 

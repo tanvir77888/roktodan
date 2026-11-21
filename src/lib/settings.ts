@@ -39,6 +39,8 @@ export interface SettingsMap {
   helpline_2_phone: string;
   announcement_enabled: string;
   announcement_text: string;
+  stories_json: string;
+  directory_json: string;
   email_address: string;
   show_live_counters: string;
   show_why_donate: string;
@@ -123,6 +125,8 @@ export async function getSettings(): Promise<SettingsMap> {
     helpline_2_phone: map.helpline_2_phone || "01619720600",
     announcement_enabled: map.announcement_enabled ?? "false",
     announcement_text: map.announcement_text ?? "",
+    stories_json: map.stories_json ?? "",
+    directory_json: map.directory_json ?? "",
     email_address: map.email_address ?? "",
     show_live_counters: map.show_live_counters ?? "true",
     show_why_donate: map.show_why_donate ?? "true",

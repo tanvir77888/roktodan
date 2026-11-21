@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
-import { verifyToken } from "@/lib/auth";
+import { verifyToken, getSessionUsername, logAudit } from "@/lib/auth";
+import { sendPushToAll } from "@/lib/push";
 
 const ALLOWED_STATUSES = ["approved", "fulfilled", "rejected"] as const;
 type AllowedStatus = (typeof ALLOWED_STATUSES)[number];
@@ -107,6 +108,15 @@ export async function PATCH(
       );
     }
 
+    const actor = await getSessionUsername();
+    if (actor) await logAudit(actor, "request_status", `অনুরোধ #${id} স্ট্যাটাস: ${rows[0].status as string}`);
+    if (rows[0].status === "approved") {
+      await sendPushToAll({
+        title: "🔴 জরুরি রক্তের প্রয়োজন",
+        body: `${rows[0].blood_group as string} রক্ত লাগবে — ${rows[0].hospital_name as string}`,
+        url: "/",
+      });
+    }
     return NextResponse.json({ success: true, data: rows[0] }, { status: 200 });
   } catch (error) {
     console.error("[PATCH /api/requests/[id]] Error:", error);

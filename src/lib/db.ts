@@ -1,5 +1,6 @@
 // src/lib/db.ts
 import { neon } from "@neondatabase/serverless";
+import * as crypto from "crypto";
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -31,6 +32,10 @@ const DEFAULT_ADMIN_PASSWORD_HASH =
 //   console.log(salt + ':' + hash);
 // "
 const ADMIN_DEFAULT_PASSWORD_PLACEHOLDER = "";
+
+function vavidOk(v: string | null | undefined): boolean {
+  return typeof v === "string" && v.length > 10;
+}
 
 export async function runMigration(): Promise<void> {
   // ── Create tables ──────────────────────────────────────────────────────────
@@ -210,6 +215,62 @@ export async function runMigration(): Promise<void> {
       created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+
+  // ── Fake-number reports (2026-11-21) ────────────────────────────────────
+  await sql`
+    CREATE TABLE IF NOT EXISTS donor_reports (
+      id         SERIAL PRIMARY KEY,
+      donor_id   INTEGER NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  // ── Multi-admin + audit log (2026-11-21) ────────────────────────────────
+  await sql`
+    CREATE TABLE IF NOT EXISTS admin_users (
+      id            SERIAL PRIMARY KEY,
+      username      VARCHAR(60) UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id            SERIAL PRIMARY KEY,
+      admin_username VARCHAR(60) NOT NULL,
+      action        VARCHAR(80) NOT NULL,
+      details       TEXT,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  // ── Web Push subscriptions + VAPID keys (2026-11-21) ───────────────────
+  await sql`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id         SERIAL PRIMARY KEY,
+      endpoint   TEXT UNIQUE NOT NULL,
+      p256dh     TEXT NOT NULL,
+      auth       TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  const vapidRows = await sql`SELECT value FROM settings WHERE key = 'admin_vapid_private'`;
+  if (vapidRows.length === 0 || !vavidOk(vapidRows[0].value as string | null)) {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync("ec", {
+      namedCurve: "P-256",
+    });
+    const pubJwk = publicKey.export({ format: "jwk" }) as unknown as { x: string; y: string };
+    const privJwk = privateKey.export({ format: "jwk" }) as unknown as { d: string };
+    const pubBytes = Buffer.concat([
+      Buffer.from([4]),
+      Buffer.from(pubJwk.x, "base64url"),
+      Buffer.from(pubJwk.y, "base64url"),
+    ]);
+    await sql`INSERT INTO settings (key, value) VALUES ('vapid_public', ${pubBytes.toString("base64url")}) ON CONFLICT (key) DO NOTHING`;
+    await sql`INSERT INTO settings (key, value) VALUES ('admin_vapid_private', ${privJwk.d}) ON CONFLICT (key) DO NOTHING`;
+    await sql`INSERT INTO settings (key, value) VALUES ('admin_vapid_pub_x', ${pubJwk.x}) ON CONFLICT (key) DO NOTHING`;
+    await sql`INSERT INTO settings (key, value) VALUES ('admin_vapid_pub_y', ${pubJwk.y}) ON CONFLICT (key) DO NOTHING`;
+  }
 
   // Site WhatsApp (admin number 01403520600) — set once if still empty
   await sql`UPDATE settings SET value = 'https://wa.me/8801403520600' WHERE key = 'whatsapp_url' AND (value IS NULL OR value = '')`;

@@ -4,6 +4,9 @@ import Image from "next/image";
 import { getSettings } from "@/lib/settings";
 import { sql } from "@/lib/db";
 import { DISTRICTS, BLOOD_GROUPS } from "@/lib/geodata";
+import LiveTicker from "./LiveTicker";
+import { cookies } from "next/headers";
+import { EN_SETTINGS, type Lang } from "@/lib/i18n";
 import type { SettingsMap } from "@/lib/settings";
 import {
   Heart,
@@ -24,6 +27,8 @@ const DonorRegistrationForm = nextDynamic(() => import("./DonorRegistrationForm"
 const BloodRequestForm = nextDynamic(() => import("./BloodRequestForm"), { ssr: false });
 const DarkModeToggle = nextDynamic(() => import("./DarkModeToggle"), { ssr: false });
 const MobileMenu = nextDynamic(() => import("./MobileMenu"), { ssr: false });
+const PushSubscribe = nextDynamic(() => import("./PushSubscribe"), { ssr: false });
+const LangToggle = nextDynamic(() => import("./LangToggle"), { ssr: false });
 
 export const revalidate = 0;
 
@@ -62,6 +67,7 @@ function Navbar({ settings }: { settings: SettingsMap }) {
         </div>
         <div className="flex items-center gap-2">
           {settings.show_dark_mode_toggle === "true" && <DarkModeToggle />}
+          <LangToggle />
           <MobileMenu />
           <a href="/admin" className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700">
             <Shield className="w-3.5 h-3.5" />
@@ -125,11 +131,25 @@ function Hero({ settings }: { settings: SettingsMap }) {
   );
 }
 
-function Testimonials() {
-  const stories = [
-    { name: "রাহাত ইসলাম", location: "ঢাকা", text: "এই সাইটের মাধ্যমে খুব দ্রুত ও+ রক্ত পেয়েছি। যারা এই উদ্যোগ নিয়েছেন তাদের ধন্যবাদ।" },
-    { name: "শরিফুল আলম", location: "চট্টগ্রাম", text: "আমি নিয়মিত রক্ত দান করি। এখানে নিবন্ধন করা খুব সহজ এবং নিরাপদ।" }
-  ];
+interface StoryItem { name: string; location: string; text: string }
+
+const DEFAULT_STORIES: StoryItem[] = [
+  { name: "রাহাত ইসলাম", location: "ঢাকা", text: "এই সাইটের মাধ্যমে খুব দ্রুত ও+ রক্ত পেয়েছি। যারা এই উদ্যোগ নিয়েছেন তাদের ধন্যবাদ।" },
+  { name: "শরিফুল আলম", location: "চট্টগ্রাম", text: "আমি নিয়মিত রক্ত দান করি। এখানে নিবন্ধন করা খুব সহজ এবং নিরাপদ।" }
+];
+
+function parseStories(json: string): StoryItem[] {
+  if (!json) return DEFAULT_STORIES;
+  try {
+    const parsed = JSON.parse(json) as StoryItem[];
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.filter((x) => x && x.name && x.text);
+    }
+  } catch { /* fall through */ }
+  return DEFAULT_STORIES;
+}
+
+function Testimonials({ stories }: { stories: StoryItem[] }) {
   return (
     <section className="py-16 bg-red-50/30 dark:bg-gray-800/20 border-t border-red-50 dark:border-gray-800">
       <div className="max-w-6xl mx-auto px-4 text-center">
@@ -150,7 +170,10 @@ function Testimonials() {
 }
 
 export default async function HomePage() {
-  const [settings, counters] = await Promise.all([getSettings(), getLiveCounters()]);
+  const [rawSettings, counters] = await Promise.all([getSettings(), getLiveCounters()]);
+  const langCookie = (await cookies()).get("rb_lang")?.value;
+  const lang: Lang = langCookie === "en" ? "en" : "bn";
+  const settings = lang === "en" ? { ...rawSettings, ...EN_SETTINGS } : rawSettings;
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       <Navbar settings={settings} />
@@ -160,6 +183,7 @@ export default async function HomePage() {
         </div>
       )}
       <main>
+        <LiveTicker />
         <Hero settings={settings} />
         
         {/* Live Counters */}
@@ -181,7 +205,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <LiveBoard />
+        <LiveBoard lang={lang} />
 
         <section id="search" className="py-16 bg-white dark:bg-gray-900">
           <div className="max-w-6xl mx-auto px-4">
@@ -206,7 +230,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <Testimonials />
+        <Testimonials stories={parseStories(settings.stories_json)} />
       </main>
 
       {/* Floating Button */}
@@ -214,6 +238,10 @@ export default async function HomePage() {
         <Droplet className="w-5 h-5" />
         <span>রক্ত চাই</span>
       </a>
+
+      <section className="max-w-6xl mx-auto px-4 pb-10">
+        <PushSubscribe />
+      </section>
 
       <footer className="bg-gray-900 text-gray-300 py-12 pb-24 md:pb-12 border-t border-gray-800 text-center">
         <div className="max-w-6xl mx-auto px-4">
@@ -233,6 +261,19 @@ export default async function HomePage() {
               )}
             </div>
           )}
+          <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 mb-6 text-sm">
+            <a href="/leaderboard" className="hover:text-white">🏆 শীর্ষ দাতা</a>
+            <a href="/donor-card" className="hover:text-white">🪪 ডোনার কার্ড</a>
+            <a href="/eligibility" className="hover:text-white">✅ যোগ্যতা যাচাই</a>
+            <a href="/compatibility" className="hover:text-white">🩸 গ্রুপ চার্ট</a>
+            <a href="/hospitals" className="hover:text-white">🏥 হাসপাতাল ও ব্লাড ব্যাংক</a>
+            <a href="/ambulance" className="hover:text-white">🚑 অ্যাম্বুলেন্স</a>
+            <a href="/faq" className="hover:text-white">❓ ভুল ধারণা ও সত্য</a>
+            <a href="/thank-you" className="hover:text-white">💌 ধন্যবাদ কার্ড</a>
+            <a href="/poster" className="hover:text-white">🖨️ পোস্টার</a>
+            <a href="/about" className="hover:text-white">আমাদের সম্পর্কে</a>
+            <a href="/privacy" className="hover:text-white">গোপনীয়তা নীতি</a>
+          </nav>
           <div className="pt-6 border-t border-gray-800 text-sm text-gray-500">{settings.footer_copyright}</div>
         </div>
       </footer>

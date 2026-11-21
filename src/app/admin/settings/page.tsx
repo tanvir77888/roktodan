@@ -42,6 +42,8 @@ interface SettingsForm {
   helpline_2_phone: string;
   announcement_enabled: string;
   announcement_text: string;
+  stories_json: string;
+  directory_json: string;
   hero_subheadline: string;
   hero_btn1_label: string;
   hero_btn2_label: string;
@@ -157,6 +159,8 @@ const DEFAULT_FORM: SettingsForm = {
   helpline_2_phone: "",
   announcement_enabled: "false",
   announcement_text: "",
+  stories_json: "",
+  directory_json: "",
   hero_subheadline: "",
   hero_btn1_label: "",
   hero_btn2_label: "",
@@ -438,6 +442,8 @@ export default function AdminSettingsPage() {
           helpline_2_phone: s.helpline_2_phone ?? "",
           announcement_enabled: s.announcement_enabled ?? "false",
           announcement_text: s.announcement_text ?? "",
+          stories_json: s.stories_json ?? "",
+          directory_json: s.directory_json ?? "",
           hero_subheadline: s.hero_subheadline ?? "",
           hero_btn1_label: s.hero_btn1_label ?? "",
           hero_btn2_label: s.hero_btn2_label ?? "",
@@ -1169,6 +1175,33 @@ const err = await res.json().catch(() => ({}));
           </div>
         </SectionCard>
 
+        <SectionCard title="সত্য গল্প ও ডিরেক্টরি (JSON)">
+          <div className="space-y-4">
+            <FormField label="গল্পসমূহ (হোমপেজে দেখাবে) — JSON তালিকা">
+              <TextAreaInput
+                value={form.stories_json}
+                onChange={(v) => setField("stories_json", v)}
+                rows={5}
+                placeholder='[{"name":"নাম","location":"হবিগঞ্জ","text":"গল্পের লেখা..."}]'
+              />
+            </FormField>
+            <p className="text-xs text-gray-400 -mt-2">
+              ফাঁকা রাখলে আগের দুটি গল্পই দেখাবে। প্রতিটি গল্পে name, location, text থাকতে হবে।
+            </p>
+            <FormField label="হাসপাতাল ও অ্যাম্বুলেন্স ডিরেক্টরি — JSON তালিকা">
+              <TextAreaInput
+                value={form.directory_json}
+                onChange={(v) => setField("directory_json", v)}
+                rows={6}
+                placeholder='[{"name":"হবিগঞ্জ সদর হাসপাতাল","type":"hospital","area":"হবিগঞ্জ সদর","phone":"","address":""}]'
+              />
+            </FormField>
+            <p className="text-xs text-gray-400 -mt-2">
+              type হতে পারে: hospital (হাসপাতাল/ব্লাড ব্যাংক) অথবা ambulance (অ্যাম্বুলেন্স)। phone না জানা থাকলে ফাঁকা রাখুন।
+            </p>
+          </div>
+        </SectionCard>
+
         <div className="flex justify-end">
           <SaveButton
             onClick={() =>
@@ -1213,6 +1246,8 @@ const err = await res.json().catch(() => ({}));
                   "urgency_critical",
                   "urgency_moderate",
                   "urgency_normal",
+                  "stories_json",
+                  "directory_json",
                 ],
                 "content"
               )

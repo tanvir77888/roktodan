@@ -9,6 +9,8 @@ import {
   Droplet,
   AlertTriangle,
   Settings,
+  ShieldCheck,
+  BellRing,
   LogOut,
   Menu,
   X,
@@ -40,6 +42,16 @@ const NAV_ITEMS: NavItem[] = [
     label: "Settings",
     href: "/admin/settings",
     icon: <Settings size={18} />,
+  },
+  {
+    label: "Admins & Security",
+    href: "/admin/admins",
+    icon: <ShieldCheck size={18} />,
+  },
+  {
+    label: "Reminders",
+    href: "/admin/reminders",
+    icon: <BellRing size={18} />,
   },
 ];
 

@@ -1,9 +1,11 @@
 // src/app/api/admin/login/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getAdminCredentials,
-  verifyPassword,
+  verifyAdminLogin,
   signToken,
+  getTotpSecret,
+  verifyTotp,
+  logAudit,
 } from "@/lib/auth";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -30,7 +32,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { username, password } = body as { username: string; password: string };
+    const { username, password, totp } = body as {
+      username: string;
+      password: string;
+      totp?: string;
+    };
 
     if (!username.trim() || !password) {
       return NextResponse.json(
@@ -39,13 +45,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const credentials = await getAdminCredentials();
+    const result = await verifyAdminLogin(username, password);
 
-    const usernameMatch =
-      credentials.username.toLowerCase() === username.trim().toLowerCase();
-    const passwordMatch = await verifyPassword(password, credentials.passwordHash);
-
-    if (!usernameMatch || !passwordMatch) {
+    if (!result.ok) {
       await new Promise((r) => setTimeout(r, 200));
       return NextResponse.json(
         { success: false, error: "Invalid credentials" },
@@ -53,7 +55,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const token = await signToken({ username: credentials.username, iat: Date.now() });
+    // ── Two-factor gate (only when the admin has enabled TOTP) ──────────
+    const totpSecret = await getTotpSecret();
+    if (totpSecret) {
+      if (!totp) {
+        return NextResponse.json(
+          { success: false, needs_totp: true, error: "Authenticator code required" },
+          { status: 401 }
+        );
+      }
+      if (!verifyTotp(totpSecret, totp)) {
+        await new Promise((r) => setTimeout(r, 200));
+        return NextResponse.json(
+          { success: false, needs_totp: true, error: "Invalid authenticator code" },
+          { status: 401 }
+        );
+      }
+    }
+
+    await logAudit(result.username, "login", "এডমিন প্যানেলে লগইন");
+
+    const token = await signToken({ username: result.username, iat: Date.now() });
 
     const isProduction = process.env.NODE_ENV === "production";
 
